@@ -1,9 +1,10 @@
-package storage
+package app
 
 import (
 	"time"
 )
 
+// Place описывает место
 type Place struct {
 	Country     string
 	City        string
@@ -12,12 +13,17 @@ type Place struct {
 	Description string
 }
 
+// Event описывает событие
 type Event struct {
-	Id          int
+	ID          int
 	Name        string
 	StartAt     time.Time
 	EndAt       time.Time
 	Place       Place
 	Description string
 	CreatedAt   time.Time
+}
+
+func (e Event) String() string {
+	return e.Name + " starting at " + e.StartAt.String()
 }

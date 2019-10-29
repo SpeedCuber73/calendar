@@ -1,21 +1,34 @@
 package app
 
-import (
-	"github.com/SpeedCuber73/calendar/storage"
-)
-
+// App сущность, описывающая бизнес-логику сервиса
 type App struct {
-	storage *storage.EventStorage
+	storage EventStorage
 }
 
-func CreateApp(storage *storage.EventStorage) (*App, error) {
+// CreateApp создает новый инстанс приложения
+func CreateApp(storage EventStorage) (*App, error) {
 	return &App{
-		storage: storage.EventStorage,
+		storage: storage,
 	}, nil
 }
 
-// ListEvents вернет список событий
-func (a *App) ListEvents() []storage.Event {
+// ListAllEvents вернет список событий
+func (a *App) ListAllEvents() []Event {
 	events, _ := a.storage.ListEvents()
 	return events
+}
+
+// AddNewEvent добавит новое событие
+func (a *App) AddNewEvent(newEvent *Event) error {
+	return a.storage.CreateEvent(newEvent)
+}
+
+// RemoveEvent добавит новое событие
+func (a *App) RemoveEvent(id int) error {
+	return a.storage.DeleteEvent(id)
+}
+
+// ChangeEvent добавит новое событие
+func (a *App) ChangeEvent(id int, newEvent *Event) error {
+	return a.storage.UpdateEvent(id, newEvent)
 }
