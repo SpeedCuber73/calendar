@@ -24,6 +24,15 @@ func main() {
 	events := myApp.ListAllEvents()
 	fmt.Printf("%s\n", events)
 
+	// add one more
+	myEvent.ID = 1
+	err := myApp.AddNewEvent(myEvent)
+	if err == app.ErrTimeBusy {
+		fmt.Println("this time is busy")
+	}
+	events = myApp.ListAllEvents()
+	fmt.Printf("%s\n", events)
+
 	// update it
 	fmt.Println("Updating...")
 	myEvent.Name = "updated"
