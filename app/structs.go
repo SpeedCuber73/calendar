@@ -25,5 +25,5 @@ type Event struct {
 }
 
 func (e Event) String() string {
-	return e.Name + " starting at " + e.StartAt.String()
+	return e.Name + " is starting at " + e.StartAt.String()
 }
