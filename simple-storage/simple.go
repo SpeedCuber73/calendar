@@ -1,3 +1,4 @@
+// Package simplestorage implements thread-unsafe storage
 package simplestorage
 
 import (
