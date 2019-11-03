@@ -1,5 +1,7 @@
 package app
 
+import "time"
+
 // App сущность, описывающая бизнес-логику сервиса
 type App struct {
 	storage EventStorage
@@ -58,4 +60,16 @@ func (a *App) ChangeEvent(id int, newEvent *Event) error {
 		return ErrTimeBusy
 	}
 	return a.storage.UpdateEvent(id, newEvent)
+}
+
+func hasFreeTime(existingEvents []Event, start, end time.Time) bool {
+	for _, event := range existingEvents {
+		if (event.StartAt.Before(start) || event.StartAt.Equal(start)) && event.EndAt.After(start) {
+			return false
+		}
+		if event.StartAt.After(start) && event.StartAt.Before(end) {
+			return false
+		}
+	}
+	return true
 }
