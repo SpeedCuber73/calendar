@@ -5,8 +5,8 @@ type App struct {
 	storage EventStorage
 }
 
-// CreateApp создает новый инстанс приложения
-func CreateApp(storage EventStorage) (*App, error) {
+// NewApp создает новый инстанс приложения
+func NewApp(storage EventStorage) (*App, error) {
 	return &App{
 		storage: storage,
 	}, nil
@@ -16,7 +16,7 @@ func CreateApp(storage EventStorage) (*App, error) {
 func (a *App) ListAllEvents() []Event {
 	events, err := a.storage.ListEvents()
 	if err != nil {
-		return []Event{}
+		return nil
 	}
 	return events
 }
@@ -34,12 +34,12 @@ func (a *App) AddNewEvent(newEvent *Event) error {
 	return a.storage.CreateEvent(newEvent)
 }
 
-// RemoveEvent добавит новое событие
+// RemoveEvent удалит событие
 func (a *App) RemoveEvent(id int) error {
 	return a.storage.DeleteEvent(id)
 }
 
-// ChangeEvent добавит новое событие
+// ChangeEvent изменит событие
 func (a *App) ChangeEvent(id int, newEvent *Event) error {
 	// this should be like one transaction
 	currentEvents, err := a.storage.ListEvents()

@@ -47,7 +47,7 @@ func TestApp(t *testing.T) {
 	}
 
 	myStorage, _ := CreateTestBusyStorage(predefinedEvents)
-	myApp, _ := CreateApp(myStorage)
+	myApp, _ := NewApp(myStorage)
 
 	// uncross event, expect no problems
 	start, _ = time.Parse(time.RFC3339, "2019-11-11T17:00:00Z")
