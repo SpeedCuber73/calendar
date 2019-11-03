@@ -2,7 +2,7 @@
 package simplestorage
 
 import (
-	"github.com/SpeedCuber73/calendar/app"
+	app "github.com/SpeedCuber73/calendar/internal/calendar-app"
 )
 
 // SimpleStorage хранилище
