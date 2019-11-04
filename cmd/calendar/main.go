@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 
 	app "github.com/SpeedCuber73/calendar/internal/calendar-app"
 	"github.com/heetch/confita"
 	"github.com/heetch/confita/backend/file"
 	flag "github.com/spf13/pflag"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var configPath string
@@ -37,5 +40,24 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot read config ", err)
 	}
-	fmt.Println(cfg)
+
+	logCfg := zap.NewDevelopmentConfig()
+	logCfg.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+	logCfg.EncoderConfig.EncodeTime = zapcore.EpochMillisTimeEncoder
+	logCfg.OutputPaths = []string{cfg.LogFile}
+
+	logger, err := logCfg.Build()
+	if err != nil {
+		log.Fatal("cant create logger ", err)
+	}
+	defer logger.Sync()
+
+	sugaredLogger := logger.Sugar()
+
+	http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		defer sugaredLogger.Sync()
+		sugaredLogger.Infow("hello world handler", "Method", r.Method, "URL", r.URL)
+		fmt.Fprintf(w, "Hello, world!")
+	})
+	http.ListenAndServe(cfg.HTTPListen, nil)
 }
