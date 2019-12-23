@@ -37,12 +37,12 @@ func (a *App) AddNewEvent(newEvent *Event) error {
 }
 
 // RemoveEvent удалит событие
-func (a *App) RemoveEvent(id int) error {
+func (a *App) RemoveEvent(id string) error {
 	return a.storage.DeleteEvent(id)
 }
 
 // ChangeEvent изменит событие
-func (a *App) ChangeEvent(id int, newEvent *Event) error {
+func (a *App) ChangeEvent(id string, newEvent *Event) error {
 	// this should be like one transaction
 	currentEvents, err := a.storage.ListEvents()
 	if err != nil {
@@ -50,7 +50,7 @@ func (a *App) ChangeEvent(id int, newEvent *Event) error {
 	}
 
 	for i, event := range currentEvents {
-		if event.ID == id {
+		if event.UUID == id {
 			currentEvents = append(currentEvents[:i], currentEvents[i+1:]...)
 			break
 		}

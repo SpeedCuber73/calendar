@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,11 +26,11 @@ func (s *TestBusyStorage) CreateEvent(event *Event) error {
 	return nil
 }
 
-func (s *TestBusyStorage) UpdateEvent(id int, event *Event) error {
+func (s *TestBusyStorage) UpdateEvent(id string, event *Event) error {
 	return nil
 }
 
-func (s *TestBusyStorage) DeleteEvent(id int) error {
+func (s *TestBusyStorage) DeleteEvent(id string) error {
 	return nil
 }
 
@@ -40,7 +41,7 @@ func TestApp(t *testing.T) {
 	end, _ := time.Parse(time.RFC3339, "2019-11-11T17:00:00Z")
 	predefinedEvents := []Event{
 		Event{
-			ID:      1,
+			UUID:    uuid.New().String(),
 			StartAt: start,
 			EndAt:   end,
 		},
@@ -49,11 +50,11 @@ func TestApp(t *testing.T) {
 	myStorage, _ := CreateTestBusyStorage(predefinedEvents)
 	myApp, _ := NewApp(myStorage)
 
-	// uncross event, expect no problems
+	// nonoverlapping event, expect no problems
 	start, _ = time.Parse(time.RFC3339, "2019-11-11T17:00:00Z")
 	end, _ = time.Parse(time.RFC3339, "2019-11-11T19:00:00Z")
 	uncrossEvent := Event{
-		ID:      1,
+		UUID:    uuid.New().String(),
 		StartAt: start,
 		EndAt:   end,
 	}
@@ -64,7 +65,7 @@ func TestApp(t *testing.T) {
 	start, _ = time.Parse(time.RFC3339, "2019-11-11T14:00:00Z")
 	end, _ = time.Parse(time.RFC3339, "2019-11-11T16:00:00Z")
 	crossEvent := Event{
-		ID:      1,
+		UUID:    uuid.New().String(),
 		StartAt: start,
 		EndAt:   end,
 	}
@@ -75,7 +76,7 @@ func TestApp(t *testing.T) {
 	start, _ = time.Parse(time.RFC3339, "2019-11-11T16:00:00Z")
 	end, _ = time.Parse(time.RFC3339, "2019-11-11T18:00:00Z")
 	crossEvent = Event{
-		ID:      1,
+		UUID:    uuid.New().String(),
 		StartAt: start,
 		EndAt:   end,
 	}
@@ -86,7 +87,7 @@ func TestApp(t *testing.T) {
 	start, _ = time.Parse(time.RFC3339, "2019-11-11T15:00:00Z")
 	end, _ = time.Parse(time.RFC3339, "2019-11-11T17:00:00Z")
 	crossEvent = Event{
-		ID:      1,
+		UUID:    uuid.New().String(),
 		StartAt: start,
 		EndAt:   end,
 	}

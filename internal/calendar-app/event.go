@@ -15,8 +15,8 @@ type Place struct {
 
 // Event описывает событие
 type Event struct {
-	ID          int
-	Name        string
+	UUID        string
+	Title       string
 	StartAt     time.Time
 	EndAt       time.Time
 	Place       Place
@@ -25,5 +25,5 @@ type Event struct {
 }
 
 func (e Event) String() string {
-	return e.Name + " is starting at " + e.StartAt.String()
+	return e.Title + " is starting at " + e.StartAt.String()
 }

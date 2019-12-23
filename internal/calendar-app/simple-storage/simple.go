@@ -31,11 +31,11 @@ func (s *SimpleStorage) CreateEvent(event *app.Event) error {
 }
 
 // UpdateEvent обновляет информацию о событии
-func (s *SimpleStorage) UpdateEvent(id int, renewEvent *app.Event) error {
+func (s *SimpleStorage) UpdateEvent(id string, renewEvent *app.Event) error {
 	for i, event := range s.Events {
-		if event.ID == id {
+		if event.UUID == id {
 			event = *renewEvent
-			event.ID = id
+			event.UUID = id
 			s.Events[i] = event
 			return nil
 		}
@@ -44,9 +44,9 @@ func (s *SimpleStorage) UpdateEvent(id int, renewEvent *app.Event) error {
 }
 
 // DeleteEvent удаляет событие
-func (s *SimpleStorage) DeleteEvent(id int) error {
+func (s *SimpleStorage) DeleteEvent(id string) error {
 	for i, event := range s.Events {
-		if event.ID == id {
+		if event.UUID == id {
 			s.Events = append(s.Events[:i], s.Events[i+1:]...)
 			return nil
 		}
