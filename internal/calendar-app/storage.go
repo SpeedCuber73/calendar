@@ -1,9 +1,15 @@
 package app
 
+import (
+	"time"
+
+	"github.com/SpeedCuber73/calendar/internal/models"
+)
+
 // EventStorage хранилище событий
 type EventStorage interface {
-	ListEvents() ([]Event, error)
-	CreateEvent(event *Event) error
-	UpdateEvent(id string, event *Event) error
+	ListEvents(from, to time.Time) ([]*models.Event, error)
+	CreateEvent(event *models.Event) error
+	UpdateEvent(id string, event *models.Event) error
 	DeleteEvent(id string) error
 }

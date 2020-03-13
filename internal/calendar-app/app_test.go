@@ -4,93 +4,186 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
+	mock "github.com/SpeedCuber73/calendar/internal/calendar-app/storage-mock"
+	"github.com/SpeedCuber73/calendar/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 
-type TestBusyStorage struct {
-	exists []Event
+func TestApp_CreateEvent(t *testing.T) {
+	type testCase struct {
+		newEvent           *models.Event
+		listEventsResponse []*models.Event
+		expErr             error
+	}
+
+	testCases := make(map[string]testCase)
+
+	testCases["Event for free time"] = testCase{
+		newEvent: &models.Event{
+			UUID:         "1",
+			Title:        "first",
+			StartAt:      time.Date(2020, time.February, 29, 15, 30, 0, 0, time.UTC), // 15:30
+			Duration:     2 * time.Hour,
+			Description:  "cool meeting",
+			User:         "Kira",
+			NotifyBefore: 3 * time.Hour,
+		},
+	}
+	testCases["Event for busy time"] = testCase{
+		newEvent: &models.Event{
+			UUID:         "1",
+			Title:        "first",
+			StartAt:      time.Date(2020, time.February, 29, 15, 30, 0, 0, time.UTC), // 15:30
+			Duration:     2 * time.Hour,
+			Description:  "cool meeting",
+			User:         "Kira",
+			NotifyBefore: 3 * time.Hour,
+		},
+		listEventsResponse: []*models.Event{
+			&models.Event{
+				UUID:         "2",
+				Title:        "second",
+				StartAt:      time.Date(2020, time.February, 29, 16, 30, 0, 0, time.UTC), // 16:30
+				Duration:     2 * time.Hour,
+				Description:  "boring meeting",
+				User:         "Kira",
+				NotifyBefore: 3 * time.Hour,
+			},
+		},
+		expErr: ErrTimeBusy,
+	}
+
+	for k, v := range testCases {
+		t.Run(k, func(t *testing.T) {
+			storage := &mock.StorageMock{}
+			app, err := NewApp(storage)
+			assert.NoError(t, err)
+
+			storage.On("ListEvents", v.newEvent.StartAt, v.newEvent.StartAt.AddDate(0, 0, 1)).Return(v.listEventsResponse, nil)
+			if v.expErr == nil {
+				storage.On("CreateEvent", v.newEvent).Return(nil)
+			}
+			err = app.CreateNewEvent(v.newEvent)
+			assert.Equal(t, v.expErr, err)
+
+			storage.AssertExpectations(t)
+		})
+	}
 }
 
-func CreateTestBusyStorage(events []Event) (*TestBusyStorage, error) {
-	return &TestBusyStorage{
-		exists: events,
-	}, nil
-}
+func TestApp_ChangeEvent(t *testing.T) {
+	type testCase struct {
+		uuid               string
+		newEvent           *models.Event
+		listEventsResponse []*models.Event
+		expErr             error
+	}
 
-func (s *TestBusyStorage) ListEvents() ([]Event, error) {
-	return s.exists, nil
-}
+	testCases := make(map[string]testCase)
 
-func (s *TestBusyStorage) CreateEvent(event *Event) error {
-	return nil
-}
+	testCases["Event not found"] = testCase{
+		uuid: "1",
+		newEvent: &models.Event{
+			Title:        "first",
+			StartAt:      time.Date(2020, time.February, 29, 15, 30, 0, 0, time.UTC), // 15:30
+			Duration:     2 * time.Hour,
+			Description:  "cool meeting",
+			User:         "Kira",
+			NotifyBefore: 3 * time.Hour,
+		},
+		listEventsResponse: []*models.Event{
+			&models.Event{
+				UUID:         "2",
+				Title:        "second",
+				StartAt:      time.Date(2020, time.February, 29, 16, 30, 0, 0, time.UTC), // 16:30
+				Duration:     2 * time.Hour,
+				Description:  "boring meeting",
+				User:         "Kira",
+				NotifyBefore: 3 * time.Hour,
+			},
+		},
+		expErr: ErrNotFound,
+	}
 
-func (s *TestBusyStorage) UpdateEvent(id string, event *Event) error {
-	return nil
-}
+	testCases["Event time busy"] = testCase{
+		uuid: "1",
+		newEvent: &models.Event{
+			Title:        "first",
+			StartAt:      time.Date(2020, time.February, 29, 15, 30, 0, 0, time.UTC), // 15:30
+			Duration:     2 * time.Hour,
+			Description:  "cool meeting",
+			User:         "Kira",
+			NotifyBefore: 3 * time.Hour,
+		},
+		listEventsResponse: []*models.Event{
+			&models.Event{
+				UUID:         "1",
+				Title:        "first",
+				StartAt:      time.Date(2020, time.February, 29, 16, 30, 0, 0, time.UTC), // 16:30
+				Duration:     2 * time.Hour,
+				Description:  "boring meeting",
+				User:         "Kira",
+				NotifyBefore: 3 * time.Hour,
+			},
+			&models.Event{
+				UUID:         "2",
+				Title:        "second",
+				StartAt:      time.Date(2020, time.February, 29, 16, 30, 0, 0, time.UTC), // 16:30
+				Duration:     2 * time.Hour,
+				Description:  "boring meeting",
+				User:         "Kira",
+				NotifyBefore: 3 * time.Hour,
+			},
+		},
+		expErr: ErrTimeBusy,
+	}
 
-func (s *TestBusyStorage) DeleteEvent(id string) error {
-	return nil
-}
-
-func TestApp(t *testing.T) {
-	assert := assert.New(t)
-
-	start, _ := time.Parse(time.RFC3339, "2019-11-11T15:00:00Z")
-	end, _ := time.Parse(time.RFC3339, "2019-11-11T17:00:00Z")
-	predefinedEvents := []Event{
-		Event{
-			UUID:    uuid.New().String(),
-			StartAt: start,
-			EndAt:   end,
+	testCases["Event successfull update"] = testCase{
+		uuid: "1",
+		newEvent: &models.Event{
+			Title:        "first",
+			StartAt:      time.Date(2020, time.February, 29, 15, 30, 0, 0, time.UTC), // 15:30
+			Duration:     2 * time.Hour,
+			Description:  "cool meeting",
+			User:         "Kira",
+			NotifyBefore: 3 * time.Hour,
+		},
+		listEventsResponse: []*models.Event{
+			&models.Event{
+				UUID:         "1",
+				Title:        "first",
+				StartAt:      time.Date(2020, time.February, 29, 16, 30, 0, 0, time.UTC), // 16:30
+				Duration:     2 * time.Hour,
+				Description:  "boring meeting",
+				User:         "Kira",
+				NotifyBefore: 3 * time.Hour,
+			},
+			&models.Event{
+				UUID:         "2",
+				Title:        "second",
+				StartAt:      time.Date(2020, time.February, 29, 11, 30, 0, 0, time.UTC), // 16:30
+				Duration:     2 * time.Hour,
+				Description:  "boring meeting",
+				User:         "Kira",
+				NotifyBefore: 3 * time.Hour,
+			},
 		},
 	}
 
-	myStorage, _ := CreateTestBusyStorage(predefinedEvents)
-	myApp, _ := NewApp(myStorage)
+	for k, v := range testCases {
+		t.Run(k, func(t *testing.T) {
+			storage := &mock.StorageMock{}
+			app, err := NewApp(storage)
+			assert.NoError(t, err)
 
-	// nonoverlapping event, expect no problems
-	start, _ = time.Parse(time.RFC3339, "2019-11-11T17:00:00Z")
-	end, _ = time.Parse(time.RFC3339, "2019-11-11T19:00:00Z")
-	uncrossEvent := Event{
-		UUID:    uuid.New().String(),
-		StartAt: start,
-		EndAt:   end,
-	}
-	err := myApp.AddNewEvent(&uncrossEvent)
-	assert.Nil(err)
+			storage.On("ListEvents", v.newEvent.StartAt, v.newEvent.StartAt.AddDate(0, 0, 1)).Return(v.listEventsResponse, nil)
+			if v.expErr == nil {
+				storage.On("UpdateEvent", v.uuid, v.newEvent).Return(nil)
+			}
+			err = app.ChangeEvent(v.uuid, v.newEvent)
+			assert.Equal(t, v.expErr, err)
 
-	// cross event, expect ErrTimeBusy (high half intersection)
-	start, _ = time.Parse(time.RFC3339, "2019-11-11T14:00:00Z")
-	end, _ = time.Parse(time.RFC3339, "2019-11-11T16:00:00Z")
-	crossEvent := Event{
-		UUID:    uuid.New().String(),
-		StartAt: start,
-		EndAt:   end,
+			storage.AssertExpectations(t)
+		})
 	}
-	err = myApp.AddNewEvent(&crossEvent)
-	assert.Equal(ErrTimeBusy, err)
-
-	// cross event, expect ErrTimeBusy (low half intersection)
-	start, _ = time.Parse(time.RFC3339, "2019-11-11T16:00:00Z")
-	end, _ = time.Parse(time.RFC3339, "2019-11-11T18:00:00Z")
-	crossEvent = Event{
-		UUID:    uuid.New().String(),
-		StartAt: start,
-		EndAt:   end,
-	}
-	err = myApp.AddNewEvent(&crossEvent)
-	assert.Equal(ErrTimeBusy, err)
-
-	// cross event, expect ErrTimeBusy (full intersection)
-	start, _ = time.Parse(time.RFC3339, "2019-11-11T15:00:00Z")
-	end, _ = time.Parse(time.RFC3339, "2019-11-11T17:00:00Z")
-	crossEvent = Event{
-		UUID:    uuid.New().String(),
-		StartAt: start,
-		EndAt:   end,
-	}
-	err = myApp.AddNewEvent(&crossEvent)
-	assert.Equal(ErrTimeBusy, err)
 }
