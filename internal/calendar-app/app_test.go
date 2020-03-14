@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	mock "github.com/SpeedCuber73/calendar/internal/calendar-app/storage-mock"
-	"github.com/SpeedCuber73/calendar/internal/models"
+	mock "github.com/bobrovka/calendar/internal/calendar-app/storage-mock"
+	"github.com/bobrovka/calendar/internal/models"
 	"github.com/stretchr/testify/assert"
 )
 

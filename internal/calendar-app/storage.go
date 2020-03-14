@@ -3,7 +3,7 @@ package app
 import (
 	"time"
 
-	"github.com/SpeedCuber73/calendar/internal/models"
+	"github.com/bobrovka/calendar/internal/models"
 )
 
 // EventStorage хранилище событий

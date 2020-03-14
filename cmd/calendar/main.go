@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	app "github.com/SpeedCuber73/calendar/internal/calendar-app"
+	app "github.com/bobrovka/calendar/internal/calendar-app"
 	"github.com/heetch/confita"
 	"github.com/heetch/confita/backend/file"
 	flag "github.com/spf13/pflag"
