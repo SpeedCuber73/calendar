@@ -1,7 +1,8 @@
 syntax = "proto3";
 
-import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
 
 message Event {
     string uuid = 1;
@@ -13,16 +14,37 @@ message Event {
     google.protobuf.Duration notifyBefore = 7;
 }
 
-message Day {
+enum Period {
+	DAY = 0;
+	WEEK = 1;
+	MONTH = 2;
+}
+
+message ListRequest {
     google.protobuf.Timestamp date = 1;
+    Period period = 2;
 }
 
 message EventsResponse {
     repeated Event events = 1;
 }
 
+message CreateRequest {
+    Event event = 1;
+}
+
+message UpdateRequest {
+    string uuid = 1;
+    Event event = 2;
+}
+
+message DeleteRequest {
+    string uuid = 1;
+}
+
 service Events {
-    rpc GetEventsForDay (Day) returns (EventsResponse);
-    rpc GetEventsForWeek (Day) returns (EventsResponse);
-    rpc GetEventsForMonth (Day) returns (EventsResponse);
+    rpc ListEvents (ListRequest) returns (EventsResponse);
+    rpc CreateEvent (CreateRequest) returns (google.protobuf.Empty);
+    rpc UpdateEvent (UpdateRequest) returns (google.protobuf.Empty);
+    rpc DeleteEvent (DeleteRequest) returns (google.protobuf.Empty);
 }

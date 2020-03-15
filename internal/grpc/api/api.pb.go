@@ -8,6 +8,7 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	duration "github.com/golang/protobuf/ptypes/duration"
+	empty "github.com/golang/protobuf/ptypes/empty"
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -25,6 +26,34 @@ var _ = math.Inf
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+
+type Period int32
+
+const (
+	Period_DAY   Period = 0
+	Period_WEEK  Period = 1
+	Period_MONTH Period = 2
+)
+
+var Period_name = map[int32]string{
+	0: "DAY",
+	1: "WEEK",
+	2: "MONTH",
+}
+
+var Period_value = map[string]int32{
+	"DAY":   0,
+	"WEEK":  1,
+	"MONTH": 2,
+}
+
+func (x Period) String() string {
+	return proto.EnumName(Period_name, int32(x))
+}
+
+func (Period) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_1b40cafcd4234784, []int{0}
+}
 
 type Event struct {
 	Uuid                 string               `protobuf:"bytes,1,opt,name=uuid,proto3" json:"uuid,omitempty"`
@@ -113,43 +142,51 @@ func (m *Event) GetNotifyBefore() *duration.Duration {
 	return nil
 }
 
-type Day struct {
+type ListRequest struct {
 	Date                 *timestamp.Timestamp `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
+	Period               Period               `protobuf:"varint,2,opt,name=period,proto3,enum=Period" json:"period,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
 }
 
-func (m *Day) Reset()         { *m = Day{} }
-func (m *Day) String() string { return proto.CompactTextString(m) }
-func (*Day) ProtoMessage()    {}
-func (*Day) Descriptor() ([]byte, []int) {
+func (m *ListRequest) Reset()         { *m = ListRequest{} }
+func (m *ListRequest) String() string { return proto.CompactTextString(m) }
+func (*ListRequest) ProtoMessage()    {}
+func (*ListRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_1b40cafcd4234784, []int{1}
 }
 
-func (m *Day) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Day.Unmarshal(m, b)
+func (m *ListRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ListRequest.Unmarshal(m, b)
 }
-func (m *Day) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Day.Marshal(b, m, deterministic)
+func (m *ListRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ListRequest.Marshal(b, m, deterministic)
 }
-func (m *Day) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Day.Merge(m, src)
+func (m *ListRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListRequest.Merge(m, src)
 }
-func (m *Day) XXX_Size() int {
-	return xxx_messageInfo_Day.Size(m)
+func (m *ListRequest) XXX_Size() int {
+	return xxx_messageInfo_ListRequest.Size(m)
 }
-func (m *Day) XXX_DiscardUnknown() {
-	xxx_messageInfo_Day.DiscardUnknown(m)
+func (m *ListRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ListRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Day proto.InternalMessageInfo
+var xxx_messageInfo_ListRequest proto.InternalMessageInfo
 
-func (m *Day) GetDate() *timestamp.Timestamp {
+func (m *ListRequest) GetDate() *timestamp.Timestamp {
 	if m != nil {
 		return m.Date
 	}
 	return nil
+}
+
+func (m *ListRequest) GetPeriod() Period {
+	if m != nil {
+		return m.Period
+	}
+	return Period_DAY
 }
 
 type EventsResponse struct {
@@ -191,10 +228,139 @@ func (m *EventsResponse) GetEvents() []*Event {
 	return nil
 }
 
+type CreateRequest struct {
+	Event                *Event   `protobuf:"bytes,1,opt,name=event,proto3" json:"event,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *CreateRequest) Reset()         { *m = CreateRequest{} }
+func (m *CreateRequest) String() string { return proto.CompactTextString(m) }
+func (*CreateRequest) ProtoMessage()    {}
+func (*CreateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1b40cafcd4234784, []int{3}
+}
+
+func (m *CreateRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CreateRequest.Unmarshal(m, b)
+}
+func (m *CreateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CreateRequest.Marshal(b, m, deterministic)
+}
+func (m *CreateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateRequest.Merge(m, src)
+}
+func (m *CreateRequest) XXX_Size() int {
+	return xxx_messageInfo_CreateRequest.Size(m)
+}
+func (m *CreateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateRequest proto.InternalMessageInfo
+
+func (m *CreateRequest) GetEvent() *Event {
+	if m != nil {
+		return m.Event
+	}
+	return nil
+}
+
+type UpdateRequest struct {
+	Uuid                 string   `protobuf:"bytes,1,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	Event                *Event   `protobuf:"bytes,2,opt,name=event,proto3" json:"event,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *UpdateRequest) Reset()         { *m = UpdateRequest{} }
+func (m *UpdateRequest) String() string { return proto.CompactTextString(m) }
+func (*UpdateRequest) ProtoMessage()    {}
+func (*UpdateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1b40cafcd4234784, []int{4}
+}
+
+func (m *UpdateRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UpdateRequest.Unmarshal(m, b)
+}
+func (m *UpdateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UpdateRequest.Marshal(b, m, deterministic)
+}
+func (m *UpdateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateRequest.Merge(m, src)
+}
+func (m *UpdateRequest) XXX_Size() int {
+	return xxx_messageInfo_UpdateRequest.Size(m)
+}
+func (m *UpdateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpdateRequest proto.InternalMessageInfo
+
+func (m *UpdateRequest) GetUuid() string {
+	if m != nil {
+		return m.Uuid
+	}
+	return ""
+}
+
+func (m *UpdateRequest) GetEvent() *Event {
+	if m != nil {
+		return m.Event
+	}
+	return nil
+}
+
+type DeleteRequest struct {
+	Uuid                 string   `protobuf:"bytes,1,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DeleteRequest) Reset()         { *m = DeleteRequest{} }
+func (m *DeleteRequest) String() string { return proto.CompactTextString(m) }
+func (*DeleteRequest) ProtoMessage()    {}
+func (*DeleteRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1b40cafcd4234784, []int{5}
+}
+
+func (m *DeleteRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteRequest.Unmarshal(m, b)
+}
+func (m *DeleteRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteRequest.Marshal(b, m, deterministic)
+}
+func (m *DeleteRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteRequest.Merge(m, src)
+}
+func (m *DeleteRequest) XXX_Size() int {
+	return xxx_messageInfo_DeleteRequest.Size(m)
+}
+func (m *DeleteRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteRequest proto.InternalMessageInfo
+
+func (m *DeleteRequest) GetUuid() string {
+	if m != nil {
+		return m.Uuid
+	}
+	return ""
+}
+
 func init() {
+	proto.RegisterEnum("Period", Period_name, Period_value)
 	proto.RegisterType((*Event)(nil), "Event")
-	proto.RegisterType((*Day)(nil), "Day")
+	proto.RegisterType((*ListRequest)(nil), "ListRequest")
 	proto.RegisterType((*EventsResponse)(nil), "EventsResponse")
+	proto.RegisterType((*CreateRequest)(nil), "CreateRequest")
+	proto.RegisterType((*UpdateRequest)(nil), "UpdateRequest")
+	proto.RegisterType((*DeleteRequest)(nil), "DeleteRequest")
 }
 
 func init() {
@@ -202,28 +368,35 @@ func init() {
 }
 
 var fileDescriptor_1b40cafcd4234784 = []byte{
-	// 322 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x90, 0x41, 0x4f, 0xfa, 0x40,
-	0x10, 0xc5, 0x53, 0x28, 0xe5, 0xff, 0x1f, 0x54, 0x74, 0xe3, 0xa1, 0x72, 0xc0, 0x86, 0x53, 0xf5,
-	0xb0, 0x18, 0x94, 0xa3, 0x07, 0x0d, 0xea, 0xc9, 0x4b, 0x63, 0xe2, 0x79, 0xb1, 0x03, 0x6e, 0x84,
-	0x6e, 0xb3, 0x3b, 0x35, 0xe1, 0x23, 0x78, 0xf6, 0x0b, 0x1b, 0xa7, 0xad, 0x41, 0x0c, 0x7a, 0xeb,
-	0xbc, 0xfe, 0xde, 0xbe, 0x37, 0x03, 0xbb, 0x2a, 0xd7, 0x43, 0x95, 0x6b, 0x99, 0x5b, 0x43, 0xa6,
-	0x77, 0x3c, 0x37, 0x66, 0xbe, 0xc0, 0x21, 0x4f, 0xd3, 0x62, 0x36, 0x24, 0xbd, 0x44, 0x47, 0x6a,
-	0x99, 0x57, 0x40, 0x7f, 0x13, 0x48, 0x0b, 0xab, 0x48, 0x9b, 0xac, 0xfc, 0x3f, 0x78, 0x6f, 0x40,
-	0xeb, 0xe6, 0x15, 0x33, 0x12, 0x02, 0xfc, 0xa2, 0xd0, 0x69, 0xe8, 0x45, 0x5e, 0xfc, 0x3f, 0xe1,
-	0x6f, 0x71, 0x08, 0x2d, 0xd2, 0xb4, 0xc0, 0xb0, 0xc1, 0x62, 0x39, 0x88, 0x0b, 0x68, 0x3b, 0x52,
-	0x96, 0xae, 0x28, 0x6c, 0x46, 0x5e, 0xdc, 0x19, 0xf5, 0x64, 0x99, 0x22, 0xeb, 0x14, 0xf9, 0x50,
-	0xd7, 0x48, 0x6a, 0x54, 0x8c, 0xe1, 0x5f, 0x9d, 0x1d, 0xfa, 0x6c, 0x3b, 0xfa, 0x61, 0x9b, 0x54,
-	0x40, 0xf2, 0x85, 0x8a, 0x08, 0x3a, 0x29, 0xba, 0x27, 0xab, 0x73, 0x76, 0xb6, 0xb8, 0xc8, 0xba,
-	0xc4, 0xc5, 0x1d, 0xda, 0x30, 0xa8, 0x8a, 0x3b, 0xb4, 0xe2, 0x12, 0x76, 0x32, 0x43, 0x7a, 0xb6,
-	0xba, 0xc6, 0x99, 0xb1, 0x18, 0xb6, 0xff, 0x0a, 0xfc, 0x86, 0x0f, 0xc6, 0xd0, 0x9c, 0xa8, 0x95,
-	0x90, 0xe0, 0xa7, 0x8a, 0x90, 0x4f, 0xf2, 0xfb, 0x96, 0xcc, 0x0d, 0xce, 0x60, 0x8f, 0x6f, 0xe9,
-	0x12, 0x74, 0xb9, 0xc9, 0x1c, 0x8a, 0x3e, 0x04, 0xc8, 0x4a, 0xe8, 0x45, 0xcd, 0xb8, 0x33, 0x0a,
-	0x24, 0x03, 0x49, 0xa5, 0x8e, 0xde, 0x3c, 0x08, 0x4a, 0x8b, 0x88, 0xa1, 0x7b, 0x87, 0x54, 0x0e,
-	0xb7, 0xc6, 0x7e, 0xe6, 0xfb, 0x72, 0xa2, 0x56, 0xbd, 0xae, 0xdc, 0x78, 0xf4, 0x04, 0xf6, 0xd7,
-	0xc9, 0x47, 0xc4, 0x97, 0x6d, 0xe8, 0x29, 0x1c, 0xac, 0xa3, 0xf7, 0x26, 0xa3, 0xe7, 0x2d, 0xec,
-	0x34, 0xe0, 0xbd, 0xce, 0x3f, 0x02, 0x00, 0x00, 0xff, 0xff, 0xc4, 0xc6, 0x41, 0x8d, 0x63, 0x02,
-	0x00, 0x00,
+	// 447 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x53, 0xef, 0x6b, 0x13, 0x41,
+	0x10, 0xf5, 0x92, 0xdc, 0xa5, 0x9d, 0x6b, 0x62, 0x58, 0x44, 0xce, 0x28, 0x6d, 0x38, 0x41, 0x82,
+	0xe2, 0x46, 0xa2, 0xfd, 0xe8, 0x87, 0x68, 0x02, 0x82, 0x3f, 0x39, 0x2a, 0xe2, 0x17, 0xe1, 0xea,
+	0x4d, 0xca, 0x42, 0x92, 0x5d, 0x77, 0xe7, 0x84, 0xfe, 0x1d, 0xfe, 0x77, 0xfe, 0x35, 0x92, 0xd9,
+	0xbb, 0x92, 0xa4, 0x35, 0xfd, 0x96, 0x99, 0x79, 0x6f, 0xe6, 0xbd, 0xb7, 0x39, 0xe8, 0xe4, 0x46,
+	0x8d, 0x72, 0xa3, 0xa4, 0xb1, 0x9a, 0x74, 0xff, 0xe1, 0x85, 0xd6, 0x17, 0x0b, 0x1c, 0x71, 0x75,
+	0x5e, 0xce, 0x47, 0xb8, 0x34, 0x74, 0x59, 0x0d, 0x8f, 0x77, 0x87, 0x45, 0x69, 0x73, 0x52, 0x7a,
+	0x55, 0xcd, 0x4f, 0x76, 0xe7, 0xa4, 0x96, 0xe8, 0x28, 0x5f, 0x1a, 0x0f, 0x48, 0xff, 0x34, 0x20,
+	0x9c, 0xfd, 0xc6, 0x15, 0x09, 0x01, 0xad, 0xb2, 0x54, 0x45, 0x12, 0x0c, 0x82, 0xe1, 0x61, 0xc6,
+	0xbf, 0xc5, 0x3d, 0x08, 0x49, 0xd1, 0x02, 0x93, 0x06, 0x37, 0x7d, 0x21, 0x5e, 0x41, 0xdb, 0x51,
+	0x6e, 0x69, 0x42, 0x49, 0x73, 0x10, 0x0c, 0xe3, 0x71, 0x5f, 0xfa, 0x33, 0xb2, 0x3e, 0x23, 0xcf,
+	0xea, 0x33, 0x59, 0x0d, 0x15, 0xa7, 0x70, 0x50, 0x8b, 0x4b, 0x5a, 0x4c, 0x7b, 0x70, 0x8d, 0x36,
+	0xad, 0x00, 0xd9, 0x15, 0x54, 0x0c, 0x20, 0x2e, 0xd0, 0xfd, 0xb4, 0xca, 0x30, 0x33, 0x64, 0x21,
+	0x9b, 0x2d, 0x16, 0xee, 0xd0, 0x26, 0x51, 0x25, 0xdc, 0xa1, 0x15, 0xaf, 0xe1, 0x68, 0xa5, 0x49,
+	0xcd, 0x2f, 0xdf, 0xe0, 0x5c, 0x5b, 0x4c, 0xda, 0xb7, 0x1d, 0xdc, 0x82, 0xa7, 0x3f, 0x20, 0xfe,
+	0xa0, 0x1c, 0x65, 0xf8, 0xab, 0x44, 0x47, 0x42, 0x42, 0xab, 0xc8, 0x09, 0x39, 0x9a, 0xfd, 0x6e,
+	0x19, 0x27, 0x4e, 0x20, 0x32, 0x68, 0x95, 0x2e, 0x38, 0xb7, 0xee, 0xb8, 0x2d, 0xbf, 0x70, 0x99,
+	0x55, 0xed, 0xf4, 0x05, 0x74, 0x39, 0x74, 0x97, 0xa1, 0x33, 0x7a, 0xe5, 0x50, 0x1c, 0x43, 0x84,
+	0xdc, 0x49, 0x82, 0x41, 0x73, 0x18, 0x8f, 0x23, 0xc9, 0x80, 0xac, 0xea, 0xa6, 0xcf, 0xa1, 0xf3,
+	0xd6, 0x62, 0x4e, 0x58, 0x6b, 0x7a, 0x04, 0x21, 0x8f, 0x2a, 0x51, 0x35, 0xde, 0x37, 0xd3, 0x09,
+	0x74, 0xbe, 0x9a, 0x62, 0x03, 0x7e, 0xd3, 0xeb, 0x5e, 0xad, 0x68, 0xdc, 0xb4, 0xe2, 0x31, 0x74,
+	0xa6, 0xb8, 0xc0, 0xbd, 0x2b, 0x9e, 0x3e, 0x81, 0xc8, 0x5b, 0x13, 0x6d, 0x68, 0x4e, 0x27, 0xdf,
+	0x7b, 0x77, 0xc4, 0x01, 0xb4, 0xbe, 0xcd, 0x66, 0xef, 0x7b, 0x81, 0x38, 0x84, 0xf0, 0xe3, 0xe7,
+	0x4f, 0x67, 0xef, 0x7a, 0x8d, 0xf1, 0xdf, 0x00, 0x22, 0xef, 0x58, 0x3c, 0x03, 0x58, 0x67, 0x5b,
+	0x55, 0x47, 0x72, 0x23, 0xe8, 0xfe, 0x5d, 0xb9, 0x13, 0xcb, 0x29, 0xc4, 0xde, 0xb6, 0xff, 0x8f,
+	0x76, 0xe5, 0x56, 0x08, 0xfd, 0xfb, 0xd7, 0x9e, 0x62, 0xb6, 0xfe, 0x38, 0xd6, 0x34, 0x6f, 0xbf,
+	0xa6, 0x6d, 0x85, 0xb1, 0x8f, 0xe6, 0x2d, 0xd7, 0xb4, 0xad, 0x00, 0xfe, 0x47, 0x3b, 0x8f, 0xb8,
+	0x7e, 0xf9, 0x2f, 0x00, 0x00, 0xff, 0xff, 0xcd, 0xa5, 0xf0, 0x18, 0xb9, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -238,9 +411,10 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type EventsClient interface {
-	GetEventsForDay(ctx context.Context, in *Day, opts ...grpc.CallOption) (*EventsResponse, error)
-	GetEventsForWeek(ctx context.Context, in *Day, opts ...grpc.CallOption) (*EventsResponse, error)
-	GetEventsForMonth(ctx context.Context, in *Day, opts ...grpc.CallOption) (*EventsResponse, error)
+	ListEvents(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*EventsResponse, error)
+	CreateEvent(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	UpdateEvent(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	DeleteEvent(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type eventsClient struct {
@@ -251,27 +425,36 @@ func NewEventsClient(cc grpc.ClientConnInterface) EventsClient {
 	return &eventsClient{cc}
 }
 
-func (c *eventsClient) GetEventsForDay(ctx context.Context, in *Day, opts ...grpc.CallOption) (*EventsResponse, error) {
+func (c *eventsClient) ListEvents(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*EventsResponse, error) {
 	out := new(EventsResponse)
-	err := c.cc.Invoke(ctx, "/Events/GetEventsForDay", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/Events/ListEvents", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *eventsClient) GetEventsForWeek(ctx context.Context, in *Day, opts ...grpc.CallOption) (*EventsResponse, error) {
-	out := new(EventsResponse)
-	err := c.cc.Invoke(ctx, "/Events/GetEventsForWeek", in, out, opts...)
+func (c *eventsClient) CreateEvent(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/Events/CreateEvent", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *eventsClient) GetEventsForMonth(ctx context.Context, in *Day, opts ...grpc.CallOption) (*EventsResponse, error) {
-	out := new(EventsResponse)
-	err := c.cc.Invoke(ctx, "/Events/GetEventsForMonth", in, out, opts...)
+func (c *eventsClient) UpdateEvent(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/Events/UpdateEvent", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *eventsClient) DeleteEvent(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/Events/DeleteEvent", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -280,79 +463,101 @@ func (c *eventsClient) GetEventsForMonth(ctx context.Context, in *Day, opts ...g
 
 // EventsServer is the server API for Events service.
 type EventsServer interface {
-	GetEventsForDay(context.Context, *Day) (*EventsResponse, error)
-	GetEventsForWeek(context.Context, *Day) (*EventsResponse, error)
-	GetEventsForMonth(context.Context, *Day) (*EventsResponse, error)
+	ListEvents(context.Context, *ListRequest) (*EventsResponse, error)
+	CreateEvent(context.Context, *CreateRequest) (*empty.Empty, error)
+	UpdateEvent(context.Context, *UpdateRequest) (*empty.Empty, error)
+	DeleteEvent(context.Context, *DeleteRequest) (*empty.Empty, error)
 }
 
 // UnimplementedEventsServer can be embedded to have forward compatible implementations.
 type UnimplementedEventsServer struct {
 }
 
-func (*UnimplementedEventsServer) GetEventsForDay(ctx context.Context, req *Day) (*EventsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetEventsForDay not implemented")
+func (*UnimplementedEventsServer) ListEvents(ctx context.Context, req *ListRequest) (*EventsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListEvents not implemented")
 }
-func (*UnimplementedEventsServer) GetEventsForWeek(ctx context.Context, req *Day) (*EventsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetEventsForWeek not implemented")
+func (*UnimplementedEventsServer) CreateEvent(ctx context.Context, req *CreateRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateEvent not implemented")
 }
-func (*UnimplementedEventsServer) GetEventsForMonth(ctx context.Context, req *Day) (*EventsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetEventsForMonth not implemented")
+func (*UnimplementedEventsServer) UpdateEvent(ctx context.Context, req *UpdateRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateEvent not implemented")
+}
+func (*UnimplementedEventsServer) DeleteEvent(ctx context.Context, req *DeleteRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteEvent not implemented")
 }
 
 func RegisterEventsServer(s *grpc.Server, srv EventsServer) {
 	s.RegisterService(&_Events_serviceDesc, srv)
 }
 
-func _Events_GetEventsForDay_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Day)
+func _Events_ListEvents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EventsServer).GetEventsForDay(ctx, in)
+		return srv.(EventsServer).ListEvents(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Events/GetEventsForDay",
+		FullMethod: "/Events/ListEvents",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventsServer).GetEventsForDay(ctx, req.(*Day))
+		return srv.(EventsServer).ListEvents(ctx, req.(*ListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Events_GetEventsForWeek_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Day)
+func _Events_CreateEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EventsServer).GetEventsForWeek(ctx, in)
+		return srv.(EventsServer).CreateEvent(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Events/GetEventsForWeek",
+		FullMethod: "/Events/CreateEvent",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventsServer).GetEventsForWeek(ctx, req.(*Day))
+		return srv.(EventsServer).CreateEvent(ctx, req.(*CreateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Events_GetEventsForMonth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Day)
+func _Events_UpdateEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EventsServer).GetEventsForMonth(ctx, in)
+		return srv.(EventsServer).UpdateEvent(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Events/GetEventsForMonth",
+		FullMethod: "/Events/UpdateEvent",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventsServer).GetEventsForMonth(ctx, req.(*Day))
+		return srv.(EventsServer).UpdateEvent(ctx, req.(*UpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Events_DeleteEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EventsServer).DeleteEvent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Events/DeleteEvent",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EventsServer).DeleteEvent(ctx, req.(*DeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -362,16 +567,20 @@ var _Events_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*EventsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetEventsForDay",
-			Handler:    _Events_GetEventsForDay_Handler,
+			MethodName: "ListEvents",
+			Handler:    _Events_ListEvents_Handler,
 		},
 		{
-			MethodName: "GetEventsForWeek",
-			Handler:    _Events_GetEventsForWeek_Handler,
+			MethodName: "CreateEvent",
+			Handler:    _Events_CreateEvent_Handler,
 		},
 		{
-			MethodName: "GetEventsForMonth",
-			Handler:    _Events_GetEventsForMonth_Handler,
+			MethodName: "UpdateEvent",
+			Handler:    _Events_UpdateEvent_Handler,
+		},
+		{
+			MethodName: "DeleteEvent",
+			Handler:    _Events_DeleteEvent_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

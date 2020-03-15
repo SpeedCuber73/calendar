@@ -6,6 +6,7 @@ import (
 	"net"
 
 	app "github.com/bobrovka/calendar/internal/calendar-app"
+	stub "github.com/bobrovka/calendar/internal/calendar-app/storage-stub"
 	"github.com/bobrovka/calendar/internal/grpc/api"
 	"github.com/bobrovka/calendar/internal/service"
 	"github.com/heetch/confita"
@@ -56,7 +57,6 @@ func main() {
 	defer logger.Sync()
 
 	sugaredLogger := logger.Sugar()
-	_ = sugaredLogger
 
 	lis, err := net.Listen("tcp", cfg.HTTPListen)
 	if err != nil {
@@ -66,6 +66,13 @@ func main() {
 	grpcServer := grpc.NewServer()
 	reflection.Register(grpcServer)
 
-	api.RegisterEventsServer(grpcServer, &service.EventService{})
+	app, err := app.NewApp(&stub.StorageStub{})
+	if err != nil {
+		log.Fatal("cannot create app instance, %v", err)
+	}
+
+	eventService := service.NewEventService(app, sugaredLogger)
+
+	api.RegisterEventsServer(grpcServer, eventService)
 	_ = grpcServer.Serve(lis)
 }
