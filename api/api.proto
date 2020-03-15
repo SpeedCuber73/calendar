@@ -1,15 +1,16 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 message Event {
     string uuid = 1;
     string title = 2;
     google.protobuf.Timestamp startAt = 3;
-    int64 duration = 4;
+    google.protobuf.Duration duration = 4;
     string description = 5;
     string user = 6;
-    int64 notifyBefore = 7;
+    google.protobuf.Duration notifyBefore = 7;
 }
 
 message Day {
