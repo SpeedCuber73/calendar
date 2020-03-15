@@ -11,11 +11,13 @@ import (
 	"go.uber.org/zap"
 )
 
+// EventService is implementation for grpc event service
 type EventService struct {
 	app    *app.App
 	logger *zap.SugaredLogger
 }
 
+// NewEventService creates new instance of grpc event service
 func NewEventService(app *app.App, logger *zap.SugaredLogger) *EventService {
 	return &EventService{
 		app:    app,
@@ -23,6 +25,7 @@ func NewEventService(app *app.App, logger *zap.SugaredLogger) *EventService {
 	}
 }
 
+// ListEvents method
 func (es *EventService) ListEvents(_ context.Context, request *api.ListRequest) (*api.EventsResponse, error) {
 	day, err := ptypes.Timestamp(request.GetDate())
 	if err != nil {
@@ -77,6 +80,7 @@ func (es *EventService) ListEvents(_ context.Context, request *api.ListRequest) 
 	}, nil
 }
 
+// CreateEvent method
 func (es *EventService) CreateEvent(_ context.Context, request *api.CreateRequest) (*empty.Empty, error) {
 	newEvent := request.GetEvent()
 
@@ -115,6 +119,7 @@ func (es *EventService) CreateEvent(_ context.Context, request *api.CreateReques
 	return &empty.Empty{}, nil
 }
 
+// UpdateEvent method
 func (es *EventService) UpdateEvent(_ context.Context, request *api.UpdateRequest) (*empty.Empty, error) {
 	uuid := request.GetUuid()
 	updatedEvent := request.GetEvent()
@@ -154,6 +159,7 @@ func (es *EventService) UpdateEvent(_ context.Context, request *api.UpdateReques
 	return &empty.Empty{}, nil
 }
 
+// DeleteEvent method
 func (es *EventService) DeleteEvent(_ context.Context, request *api.DeleteRequest) (*empty.Empty, error) {
 	uuid := request.GetUuid()
 

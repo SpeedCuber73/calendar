@@ -18,7 +18,7 @@ func NewApp(storage EventStorage) (*App, error) {
 	}, nil
 }
 
-// ListAllEvents вернет список событий на день
+// ListDayEvents вернет список событий на день
 func (a *App) ListDayEvents(date time.Time) ([]*models.Event, error) {
 	events, err := a.storage.ListEvents(date, date.AddDate(0, 0, 1))
 	if err != nil {
@@ -27,7 +27,7 @@ func (a *App) ListDayEvents(date time.Time) ([]*models.Event, error) {
 	return events, nil
 }
 
-// ListAllEvents вернет список событий на неделю
+// ListWeekEvents вернет список событий на неделю
 func (a *App) ListWeekEvents(date time.Time) ([]*models.Event, error) {
 	events, err := a.storage.ListEvents(date, date.AddDate(0, 0, 7))
 	if err != nil {
@@ -36,7 +36,7 @@ func (a *App) ListWeekEvents(date time.Time) ([]*models.Event, error) {
 	return events, nil
 }
 
-// ListAllEvents вернет список событий на месяц
+// ListMonthEvents вернет список событий на месяц
 func (a *App) ListMonthEvents(date time.Time) ([]*models.Event, error) {
 	events, err := a.storage.ListEvents(date, date.AddDate(0, 1, 0))
 	if err != nil {
