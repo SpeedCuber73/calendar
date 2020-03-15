@@ -1,2 +1,2 @@
 gen.proto:
-	protoc --go_out=plugins=grpc:. api/event.proto
+	protoc --go_out=plugins=grpc:internal/grpc api/api.proto

@@ -2,16 +2,19 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"net/http"
+	"net"
 
 	app "github.com/bobrovka/calendar/internal/calendar-app"
+	"github.com/bobrovka/calendar/internal/grpc/api"
+	"github.com/bobrovka/calendar/internal/service"
 	"github.com/heetch/confita"
 	"github.com/heetch/confita/backend/file"
 	flag "github.com/spf13/pflag"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 var configPath string
@@ -28,7 +31,7 @@ func main() {
 	}
 
 	cfg := app.Config{
-		HTTPListen: "127.0.0.1:9000",
+		HTTPListen: "127.0.0.1:50051",
 		LogLevel:   "debug",
 	}
 
@@ -53,11 +56,16 @@ func main() {
 	defer logger.Sync()
 
 	sugaredLogger := logger.Sugar()
+	_ = sugaredLogger
 
-	http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
-		defer sugaredLogger.Sync()
-		sugaredLogger.Infow("hello world handler", "Method", r.Method, "URL", r.URL)
-		fmt.Fprintf(w, "Hello, world!")
-	})
-	http.ListenAndServe(cfg.HTTPListen, nil)
+	lis, err := net.Listen("tcp", cfg.HTTPListen)
+	if err != nil {
+		log.Fatalf("cannot listen %s, %v", cfg.HTTPListen, err)
+	}
+
+	grpcServer := grpc.NewServer()
+	reflection.Register(grpcServer)
+
+	api.RegisterEventsServer(grpcServer, &service.EventService{})
+	_ = grpcServer.Serve(lis)
 }

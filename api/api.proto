@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+message Event {
+    string uuid = 1;
+    string title = 2;
+    google.protobuf.Timestamp startAt = 3;
+    int64 duration = 4;
+    string description = 5;
+    string user = 6;
+    int64 notifyBefore = 7;
+}
+
+message Day {
+    google.protobuf.Timestamp date = 1;
+}
+
+message EventsResponse {
+    repeated Event events = 1;
+}
+
+service Events {
+    rpc GetEventsForDay (Day) returns (EventsResponse);
+    rpc GetEventsForWeek (Day) returns (EventsResponse);
+    rpc GetEventsForMonth (Day) returns (EventsResponse);
+}

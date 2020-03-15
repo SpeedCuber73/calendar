@@ -1,5 +1,5 @@
 {
-    "HTTPListen": "127.0.0.1:9000",
+    "HTTPListen": "127.0.0.1:50051",
     "LogFile": "log",
     "LogLevel": "debug"
 }
