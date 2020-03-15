@@ -22,8 +22,8 @@ func (s *StorageStub) ListEvents(_, _ time.Time) ([]*models.Event, error) {
 	}, nil
 }
 
-func (s *StorageStub) CreateEvent(_ *models.Event) error {
-	return nil
+func (s *StorageStub) CreateEvent(_ *models.Event) (string, error) {
+	return "1", nil
 }
 
 func (s *StorageStub) UpdateEvent(_ string, _ *models.Event) error {

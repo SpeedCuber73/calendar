@@ -21,9 +21,14 @@ func (m *StorageMock) ListEvents(from, to time.Time) ([]*models.Event, error) {
 	return args.Get(0).([]*models.Event), err
 }
 
-func (m *StorageMock) CreateEvent(event *models.Event) error {
+func (m *StorageMock) CreateEvent(event *models.Event) (string, error) {
 	args := m.Called(event)
-	return args.Error(0)
+	err := args.Error(1)
+	if err != nil {
+		return "", err
+	}
+
+	return args.String(0), err
 }
 
 func (m *StorageMock) UpdateEvent(id string, event *models.Event) error {

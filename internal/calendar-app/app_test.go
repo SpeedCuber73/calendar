@@ -13,6 +13,7 @@ func TestApp_CreateEvent(t *testing.T) {
 	type testCase struct {
 		newEvent           *models.Event
 		listEventsResponse []*models.Event
+		expUuid            string
 		expErr             error
 	}
 
@@ -28,6 +29,7 @@ func TestApp_CreateEvent(t *testing.T) {
 			User:         "Kira",
 			NotifyBefore: 3 * time.Hour,
 		},
+		expUuid: "100",
 	}
 	testCases["Event for busy time"] = testCase{
 		newEvent: &models.Event{
@@ -61,10 +63,14 @@ func TestApp_CreateEvent(t *testing.T) {
 
 			storage.On("ListEvents", v.newEvent.StartAt, v.newEvent.StartAt.AddDate(0, 0, 1)).Return(v.listEventsResponse, nil)
 			if v.expErr == nil {
-				storage.On("CreateEvent", v.newEvent).Return(nil)
+				storage.On("CreateEvent", v.newEvent).Return(v.expUuid, nil)
 			}
-			err = app.CreateNewEvent(v.newEvent)
-			assert.Equal(t, v.expErr, err)
+			uuid, err := app.CreateNewEvent(v.newEvent)
+			if err != nil {
+				assert.Equal(t, v.expErr, err)
+			} else {
+				assert.Equal(t, v.expUuid, uuid)
+			}
 
 			storage.AssertExpectations(t)
 		})

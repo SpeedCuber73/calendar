@@ -46,15 +46,15 @@ func (a *App) ListMonthEvents(date time.Time) ([]*models.Event, error) {
 }
 
 // CreateNewEvent добавит новое событие
-func (a *App) CreateNewEvent(newEvent *models.Event) error {
+func (a *App) CreateNewEvent(newEvent *models.Event) (string, error) {
 	// this should be like one transaction
 	currentEvents, err := a.storage.ListEvents(newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if !hasFreeTime(currentEvents, newEvent.StartAt, newEvent.StartAt.Add(newEvent.Duration)) {
-		return ErrTimeBusy
+		return "", ErrTimeBusy
 	}
 
 	return a.storage.CreateEvent(newEvent)
