@@ -58,7 +58,7 @@ func TestApp_CreateEvent(t *testing.T) {
 	for k, v := range testCases {
 		t.Run(k, func(t *testing.T) {
 			storage := &mock.StorageMock{}
-			app, err := NewApp(storage)
+			app, err := NewCalendar(storage)
 			assert.NoError(t, err)
 
 			storage.On("ListEvents", v.newEvent.StartAt, v.newEvent.StartAt.AddDate(0, 0, 1)).Return(v.listEventsResponse, nil)
@@ -179,7 +179,7 @@ func TestApp_ChangeEvent(t *testing.T) {
 	for k, v := range testCases {
 		t.Run(k, func(t *testing.T) {
 			storage := &mock.StorageMock{}
-			app, err := NewApp(storage)
+			app, err := NewCalendar(storage)
 			assert.NoError(t, err)
 
 			storage.On("ListEvents", v.newEvent.StartAt, v.newEvent.StartAt.AddDate(0, 0, 1)).Return(v.listEventsResponse, nil)
