@@ -66,7 +66,7 @@ func main() {
 	grpcServer := grpc.NewServer()
 	reflection.Register(grpcServer)
 
-	app, err := app.NewApp(&stub.StorageStub{})
+	app, err := app.NewCalendar(&stub.StorageStub{})
 	if err != nil {
 		log.Fatalf("cannot create app instance, %v", err)
 	}

@@ -13,12 +13,12 @@ import (
 
 // EventService is implementation for grpc event service
 type EventService struct {
-	app    *app.App
+	app    app.App
 	logger *zap.SugaredLogger
 }
 
 // NewEventService creates new instance of grpc event service
-func NewEventService(app *app.App, logger *zap.SugaredLogger) *EventService {
+func NewEventService(app app.App, logger *zap.SugaredLogger) *EventService {
 	return &EventService{
 		app:    app,
 		logger: logger,
@@ -81,7 +81,7 @@ func (es *EventService) ListEvents(_ context.Context, request *api.ListRequest) 
 }
 
 // CreateEvent method
-func (es *EventService) CreateEvent(_ context.Context, request *api.CreateRequest) (*empty.Empty, error) {
+func (es *EventService) CreateEvent(_ context.Context, request *api.CreateRequest) (*api.CreateResponse, error) {
 	newEvent := request.GetEvent()
 
 	startAt, err := ptypes.Timestamp(newEvent.GetStartAt())
@@ -116,7 +116,9 @@ func (es *EventService) CreateEvent(_ context.Context, request *api.CreateReques
 	}
 
 	es.logger.Infow("Success CreateEvent", "UUID", uuid)
-	return &empty.Empty{}, nil
+	return &api.CreateResponse{
+		Uuid: uuid,
+	}, nil
 }
 
 // UpdateEvent method

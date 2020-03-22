@@ -33,6 +33,10 @@ message CreateRequest {
     Event event = 1;
 }
 
+message CreateResponse {
+    string uuid = 1;
+}
+
 message UpdateRequest {
     string uuid = 1;
     Event event = 2;
@@ -44,7 +48,7 @@ message DeleteRequest {
 
 service Events {
     rpc ListEvents (ListRequest) returns (ListResponse);
-    rpc CreateEvent (CreateRequest) returns (google.protobuf.Empty);
+    rpc CreateEvent (CreateRequest) returns (CreateResponse);
     rpc UpdateEvent (UpdateRequest) returns (google.protobuf.Empty);
     rpc DeleteEvent (DeleteRequest) returns (google.protobuf.Empty);
 }

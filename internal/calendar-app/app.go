@@ -6,20 +6,29 @@ import (
 	"github.com/bobrovka/calendar/internal/models"
 )
 
-// App сущность, описывающая бизнес-логику сервиса
-type App struct {
+type App interface {
+	ListDayEvents(date time.Time) ([]*models.Event, error)
+	ListWeekEvents(date time.Time) ([]*models.Event, error)
+	ListMonthEvents(date time.Time) ([]*models.Event, error)
+	CreateNewEvent(newEvent *models.Event) (string, error)
+	RemoveEvent(uuid string) error
+	ChangeEvent(uuid string, newEvent *models.Event) error
+}
+
+// Calendar сущность, описывающая бизнес-логику сервиса
+type Calendar struct {
 	storage EventStorage
 }
 
-// NewApp создает новый инстанс приложения
-func NewApp(storage EventStorage) (*App, error) {
-	return &App{
+// NewCalendar создает новый инстанс приложения
+func NewCalendar(storage EventStorage) (*Calendar, error) {
+	return &Calendar{
 		storage: storage,
 	}, nil
 }
 
 // ListDayEvents вернет список событий на день
-func (a *App) ListDayEvents(date time.Time) ([]*models.Event, error) {
+func (a *Calendar) ListDayEvents(date time.Time) ([]*models.Event, error) {
 	events, err := a.storage.ListEvents(date, date.AddDate(0, 0, 1))
 	if err != nil {
 		return nil, err
@@ -28,7 +37,7 @@ func (a *App) ListDayEvents(date time.Time) ([]*models.Event, error) {
 }
 
 // ListWeekEvents вернет список событий на неделю
-func (a *App) ListWeekEvents(date time.Time) ([]*models.Event, error) {
+func (a *Calendar) ListWeekEvents(date time.Time) ([]*models.Event, error) {
 	events, err := a.storage.ListEvents(date, date.AddDate(0, 0, 7))
 	if err != nil {
 		return nil, err
@@ -37,7 +46,7 @@ func (a *App) ListWeekEvents(date time.Time) ([]*models.Event, error) {
 }
 
 // ListMonthEvents вернет список событий на месяц
-func (a *App) ListMonthEvents(date time.Time) ([]*models.Event, error) {
+func (a *Calendar) ListMonthEvents(date time.Time) ([]*models.Event, error) {
 	events, err := a.storage.ListEvents(date, date.AddDate(0, 1, 0))
 	if err != nil {
 		return nil, err
@@ -46,7 +55,7 @@ func (a *App) ListMonthEvents(date time.Time) ([]*models.Event, error) {
 }
 
 // CreateNewEvent добавит новое событие
-func (a *App) CreateNewEvent(newEvent *models.Event) (string, error) {
+func (a *Calendar) CreateNewEvent(newEvent *models.Event) (string, error) {
 	// this should be like one transaction
 	currentEvents, err := a.storage.ListEvents(newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
 	if err != nil {
@@ -61,12 +70,12 @@ func (a *App) CreateNewEvent(newEvent *models.Event) (string, error) {
 }
 
 // RemoveEvent удалит событие
-func (a *App) RemoveEvent(uuid string) error {
+func (a *Calendar) RemoveEvent(uuid string) error {
 	return a.storage.DeleteEvent(uuid)
 }
 
 // ChangeEvent изменит событие
-func (a *App) ChangeEvent(uuid string, newEvent *models.Event) error {
+func (a *Calendar) ChangeEvent(uuid string, newEvent *models.Event) error {
 	// get events on this day
 	currentEvents, err := a.storage.ListEvents(newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
 	if err != nil {
