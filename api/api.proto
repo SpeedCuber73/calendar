@@ -25,7 +25,7 @@ message ListRequest {
     Period period = 2;
 }
 
-message EventsResponse {
+message ListResponse {
     repeated Event events = 1;
 }
 
@@ -43,7 +43,7 @@ message DeleteRequest {
 }
 
 service Events {
-    rpc ListEvents (ListRequest) returns (EventsResponse);
+    rpc ListEvents (ListRequest) returns (ListResponse);
     rpc CreateEvent (CreateRequest) returns (google.protobuf.Empty);
     rpc UpdateEvent (UpdateRequest) returns (google.protobuf.Empty);
     rpc DeleteEvent (DeleteRequest) returns (google.protobuf.Empty);

@@ -26,7 +26,7 @@ func NewEventService(app *app.App, logger *zap.SugaredLogger) *EventService {
 }
 
 // ListEvents method
-func (es *EventService) ListEvents(_ context.Context, request *api.ListRequest) (*api.EventsResponse, error) {
+func (es *EventService) ListEvents(_ context.Context, request *api.ListRequest) (*api.ListResponse, error) {
 	day, err := ptypes.Timestamp(request.GetDate())
 	if err != nil {
 		es.logger.Errorw("error time conversion", "methodName", "ListEvents", "err", err)
@@ -75,7 +75,7 @@ func (es *EventService) ListEvents(_ context.Context, request *api.ListRequest) 
 	}
 
 	es.logger.Infow("Success ListEvents")
-	return &api.EventsResponse{
+	return &api.ListResponse{
 		Events: result,
 	}, nil
 }
