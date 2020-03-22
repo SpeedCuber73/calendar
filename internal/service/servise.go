@@ -4,8 +4,8 @@ import (
 	"context"
 
 	app "github.com/bobrovka/calendar/internal/calendar-app"
-	"github.com/bobrovka/calendar/internal/grpc/api"
 	"github.com/bobrovka/calendar/internal/models"
+	"github.com/bobrovka/calendar/pkg/calendar/api"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.uber.org/zap"

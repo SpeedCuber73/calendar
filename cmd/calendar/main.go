@@ -7,8 +7,8 @@ import (
 
 	app "github.com/bobrovka/calendar/internal/calendar-app"
 	stub "github.com/bobrovka/calendar/internal/calendar-app/storage-stub"
-	"github.com/bobrovka/calendar/internal/grpc/api"
 	"github.com/bobrovka/calendar/internal/service"
+	"github.com/bobrovka/calendar/pkg/calendar/api"
 	"github.com/heetch/confita"
 	"github.com/heetch/confita/backend/file"
 	flag "github.com/spf13/pflag"
@@ -68,7 +68,7 @@ func main() {
 
 	app, err := app.NewApp(&stub.StorageStub{})
 	if err != nil {
-		log.Fatal("cannot create app instance, %v", err)
+		log.Fatalf("cannot create app instance, %v", err)
 	}
 
 	eventService := service.NewEventService(app, sugaredLogger)
