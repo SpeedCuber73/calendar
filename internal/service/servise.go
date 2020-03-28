@@ -26,7 +26,7 @@ func NewEventService(app app.App, logger *zap.SugaredLogger) *EventService {
 }
 
 // ListEvents method
-func (es *EventService) ListEvents(_ context.Context, request *api.ListRequest) (*api.ListResponse, error) {
+func (es *EventService) ListEvents(ctx context.Context, request *api.ListRequest) (*api.ListResponse, error) {
 	day, err := ptypes.Timestamp(request.GetDate())
 	if err != nil {
 		es.logger.Errorw("error time conversion", "methodName", "ListEvents", "err", err)
@@ -36,19 +36,19 @@ func (es *EventService) ListEvents(_ context.Context, request *api.ListRequest) 
 	var events []*models.Event
 	switch request.GetPeriod() {
 	case api.Period_DAY:
-		events, err = es.app.ListDayEvents(day)
+		events, err = es.app.ListDayEvents(ctx, day)
 		if err != nil {
 			es.logger.Errorw("error ListDayEvents", "methodName", "ListEvents", "err", err)
 			return nil, err
 		}
 	case api.Period_WEEK:
-		events, err = es.app.ListWeekEvents(day)
+		events, err = es.app.ListWeekEvents(ctx, day)
 		if err != nil {
 			es.logger.Errorw("error ListWeekEvents", "methodName", "ListEvents", "err", err)
 			return nil, err
 		}
 	case api.Period_MONTH:
-		events, err = es.app.ListMonthEvents(day)
+		events, err = es.app.ListMonthEvents(ctx, day)
 		if err != nil {
 			es.logger.Errorw("error ListMonthEvents", "methodName", "ListEvents", "err", err)
 			return nil, err
@@ -81,7 +81,7 @@ func (es *EventService) ListEvents(_ context.Context, request *api.ListRequest) 
 }
 
 // CreateEvent method
-func (es *EventService) CreateEvent(_ context.Context, request *api.CreateRequest) (*api.CreateResponse, error) {
+func (es *EventService) CreateEvent(ctx context.Context, request *api.CreateRequest) (*api.CreateResponse, error) {
 	newEvent := request.GetEvent()
 
 	startAt, err := ptypes.Timestamp(newEvent.GetStartAt())
@@ -102,7 +102,7 @@ func (es *EventService) CreateEvent(_ context.Context, request *api.CreateReques
 		return nil, err
 	}
 
-	uuid, err := es.app.CreateNewEvent(&models.Event{
+	uuid, err := es.app.CreateNewEvent(ctx, &models.Event{
 		Title:        newEvent.GetTitle(),
 		StartAt:      startAt,
 		Duration:     duration,
@@ -122,7 +122,7 @@ func (es *EventService) CreateEvent(_ context.Context, request *api.CreateReques
 }
 
 // UpdateEvent method
-func (es *EventService) UpdateEvent(_ context.Context, request *api.UpdateRequest) (*empty.Empty, error) {
+func (es *EventService) UpdateEvent(ctx context.Context, request *api.UpdateRequest) (*empty.Empty, error) {
 	uuid := request.GetUuid()
 	updatedEvent := request.GetEvent()
 
@@ -144,7 +144,7 @@ func (es *EventService) UpdateEvent(_ context.Context, request *api.UpdateReques
 		return nil, err
 	}
 
-	err = es.app.ChangeEvent(uuid, &models.Event{
+	err = es.app.ChangeEvent(ctx, uuid, &models.Event{
 		Title:        updatedEvent.GetTitle(),
 		StartAt:      startAt,
 		Duration:     duration,
@@ -162,10 +162,10 @@ func (es *EventService) UpdateEvent(_ context.Context, request *api.UpdateReques
 }
 
 // DeleteEvent method
-func (es *EventService) DeleteEvent(_ context.Context, request *api.DeleteRequest) (*empty.Empty, error) {
+func (es *EventService) DeleteEvent(ctx context.Context, request *api.DeleteRequest) (*empty.Empty, error) {
 	uuid := request.GetUuid()
 
-	err := es.app.RemoveEvent(uuid)
+	err := es.app.RemoveEvent(ctx, uuid)
 	if err != nil {
 		es.logger.Errorw("error RemoveEvent", "methodName", "DeleteEvent", "err", err)
 		return nil, err

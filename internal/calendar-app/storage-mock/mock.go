@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"context"
 	"time"
 
 	"github.com/bobrovka/calendar/internal/models"
@@ -13,8 +14,8 @@ type StorageMock struct {
 }
 
 // ListEvents мокирует метод
-func (m *StorageMock) ListEvents(from, to time.Time) ([]*models.Event, error) {
-	args := m.Called(from, to)
+func (m *StorageMock) ListEvents(ctx context.Context, from, to time.Time) ([]*models.Event, error) {
+	args := m.Called(ctx, from, to)
 	err := args.Error(1)
 	if err != nil {
 		return nil, err
@@ -24,8 +25,8 @@ func (m *StorageMock) ListEvents(from, to time.Time) ([]*models.Event, error) {
 }
 
 // CreateEvent мокирует метод
-func (m *StorageMock) CreateEvent(event *models.Event) (string, error) {
-	args := m.Called(event)
+func (m *StorageMock) CreateEvent(ctx context.Context, event *models.Event) (string, error) {
+	args := m.Called(ctx, event)
 	err := args.Error(1)
 	if err != nil {
 		return "", err
@@ -35,13 +36,13 @@ func (m *StorageMock) CreateEvent(event *models.Event) (string, error) {
 }
 
 // UpdateEvent мокирует метод
-func (m *StorageMock) UpdateEvent(id string, event *models.Event) error {
-	args := m.Called(id, event)
+func (m *StorageMock) UpdateEvent(ctx context.Context, id string, event *models.Event) error {
+	args := m.Called(ctx, id, event)
 	return args.Error(0)
 }
 
 // DeleteEvent мокирует метод
-func (m *StorageMock) DeleteEvent(id string) error {
-	args := m.Called(id)
+func (m *StorageMock) DeleteEvent(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
 	return args.Error(0)
 }

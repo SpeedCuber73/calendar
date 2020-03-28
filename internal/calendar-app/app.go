@@ -1,18 +1,20 @@
 package app
 
 import (
+	"context"
 	"time"
 
 	"github.com/bobrovka/calendar/internal/models"
 )
 
+// App интерфейс приложения
 type App interface {
-	ListDayEvents(date time.Time) ([]*models.Event, error)
-	ListWeekEvents(date time.Time) ([]*models.Event, error)
-	ListMonthEvents(date time.Time) ([]*models.Event, error)
-	CreateNewEvent(newEvent *models.Event) (string, error)
-	RemoveEvent(uuid string) error
-	ChangeEvent(uuid string, newEvent *models.Event) error
+	ListDayEvents(ctx context.Context, date time.Time) ([]*models.Event, error)
+	ListWeekEvents(ctx context.Context, date time.Time) ([]*models.Event, error)
+	ListMonthEvents(ctx context.Context, date time.Time) ([]*models.Event, error)
+	CreateNewEvent(ctx context.Context, newEvent *models.Event) (string, error)
+	RemoveEvent(ctx context.Context, uuid string) error
+	ChangeEvent(ctx context.Context, uuid string, newEvent *models.Event) error
 }
 
 // Calendar сущность, описывающая бизнес-логику сервиса
@@ -28,8 +30,8 @@ func NewCalendar(storage EventStorage) (*Calendar, error) {
 }
 
 // ListDayEvents вернет список событий на день
-func (a *Calendar) ListDayEvents(date time.Time) ([]*models.Event, error) {
-	events, err := a.storage.ListEvents(date, date.AddDate(0, 0, 1))
+func (a *Calendar) ListDayEvents(ctx context.Context, date time.Time) ([]*models.Event, error) {
+	events, err := a.storage.ListEvents(ctx, date, date.AddDate(0, 0, 1))
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +39,8 @@ func (a *Calendar) ListDayEvents(date time.Time) ([]*models.Event, error) {
 }
 
 // ListWeekEvents вернет список событий на неделю
-func (a *Calendar) ListWeekEvents(date time.Time) ([]*models.Event, error) {
-	events, err := a.storage.ListEvents(date, date.AddDate(0, 0, 7))
+func (a *Calendar) ListWeekEvents(ctx context.Context, date time.Time) ([]*models.Event, error) {
+	events, err := a.storage.ListEvents(ctx, date, date.AddDate(0, 0, 7))
 	if err != nil {
 		return nil, err
 	}
@@ -46,8 +48,8 @@ func (a *Calendar) ListWeekEvents(date time.Time) ([]*models.Event, error) {
 }
 
 // ListMonthEvents вернет список событий на месяц
-func (a *Calendar) ListMonthEvents(date time.Time) ([]*models.Event, error) {
-	events, err := a.storage.ListEvents(date, date.AddDate(0, 1, 0))
+func (a *Calendar) ListMonthEvents(ctx context.Context, date time.Time) ([]*models.Event, error) {
+	events, err := a.storage.ListEvents(ctx, date, date.AddDate(0, 1, 0))
 	if err != nil {
 		return nil, err
 	}
@@ -55,9 +57,9 @@ func (a *Calendar) ListMonthEvents(date time.Time) ([]*models.Event, error) {
 }
 
 // CreateNewEvent добавит новое событие
-func (a *Calendar) CreateNewEvent(newEvent *models.Event) (string, error) {
+func (a *Calendar) CreateNewEvent(ctx context.Context, newEvent *models.Event) (string, error) {
 	// this should be like one transaction
-	currentEvents, err := a.storage.ListEvents(newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
+	currentEvents, err := a.storage.ListEvents(ctx, newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
 	if err != nil {
 		return "", err
 	}
@@ -66,18 +68,18 @@ func (a *Calendar) CreateNewEvent(newEvent *models.Event) (string, error) {
 		return "", ErrTimeBusy
 	}
 
-	return a.storage.CreateEvent(newEvent)
+	return a.storage.CreateEvent(ctx, newEvent)
 }
 
 // RemoveEvent удалит событие
-func (a *Calendar) RemoveEvent(uuid string) error {
-	return a.storage.DeleteEvent(uuid)
+func (a *Calendar) RemoveEvent(ctx context.Context, uuid string) error {
+	return a.storage.DeleteEvent(ctx, uuid)
 }
 
 // ChangeEvent изменит событие
-func (a *Calendar) ChangeEvent(uuid string, newEvent *models.Event) error {
+func (a *Calendar) ChangeEvent(ctx context.Context, uuid string, newEvent *models.Event) error {
 	// get events on this day
-	currentEvents, err := a.storage.ListEvents(newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
+	currentEvents, err := a.storage.ListEvents(ctx, newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
 	if err != nil {
 		return err
 	}
@@ -100,7 +102,7 @@ func (a *Calendar) ChangeEvent(uuid string, newEvent *models.Event) error {
 		return ErrTimeBusy
 	}
 
-	return a.storage.UpdateEvent(uuid, newEvent)
+	return a.storage.UpdateEvent(ctx, uuid, newEvent)
 }
 
 func hasFreeTime(existingEvents []*models.Event, start, end time.Time) bool {

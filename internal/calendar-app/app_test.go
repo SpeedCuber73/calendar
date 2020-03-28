@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -61,11 +62,11 @@ func TestApp_CreateEvent(t *testing.T) {
 			app, err := NewCalendar(storage)
 			assert.NoError(t, err)
 
-			storage.On("ListEvents", v.newEvent.StartAt, v.newEvent.StartAt.AddDate(0, 0, 1)).Return(v.listEventsResponse, nil)
+			storage.On("ListEvents", context.Background(), v.newEvent.StartAt, v.newEvent.StartAt.AddDate(0, 0, 1)).Return(v.listEventsResponse, nil)
 			if v.expErr == nil {
-				storage.On("CreateEvent", v.newEvent).Return(v.expUUID, nil)
+				storage.On("CreateEvent", context.Background(), v.newEvent).Return(v.expUUID, nil)
 			}
-			uuid, err := app.CreateNewEvent(v.newEvent)
+			uuid, err := app.CreateNewEvent(context.Background(), v.newEvent)
 			if err != nil {
 				assert.Equal(t, v.expErr, err)
 			} else {
@@ -182,11 +183,11 @@ func TestApp_ChangeEvent(t *testing.T) {
 			app, err := NewCalendar(storage)
 			assert.NoError(t, err)
 
-			storage.On("ListEvents", v.newEvent.StartAt, v.newEvent.StartAt.AddDate(0, 0, 1)).Return(v.listEventsResponse, nil)
+			storage.On("ListEvents", context.Background(), v.newEvent.StartAt, v.newEvent.StartAt.AddDate(0, 0, 1)).Return(v.listEventsResponse, nil)
 			if v.expErr == nil {
-				storage.On("UpdateEvent", v.uuid, v.newEvent).Return(nil)
+				storage.On("UpdateEvent", context.Background(), v.uuid, v.newEvent).Return(nil)
 			}
-			err = app.ChangeEvent(v.uuid, v.newEvent)
+			err = app.ChangeEvent(context.Background(), v.uuid, v.newEvent)
 			assert.Equal(t, v.expErr, err)
 
 			storage.AssertExpectations(t)
