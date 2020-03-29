@@ -1,5 +1,10 @@
 {
     "HTTPListen": "127.0.0.1:50051",
     "LogFile": "log",
-    "LogLevel": "debug"
+    "LogLevel": "debug",
+    "PgName": "calendar",
+    "PgHost": "localhost",
+    "PgPort": 5432,
+    "PgUser": "postgres",
+    "PgPassword": "password"
 }

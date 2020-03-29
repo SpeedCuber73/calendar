@@ -9,9 +9,9 @@ import (
 
 // App интерфейс приложения
 type App interface {
-	ListDayEvents(ctx context.Context, date time.Time) ([]*models.Event, error)
-	ListWeekEvents(ctx context.Context, date time.Time) ([]*models.Event, error)
-	ListMonthEvents(ctx context.Context, date time.Time) ([]*models.Event, error)
+	ListDayEvents(ctx context.Context, user string, date time.Time) ([]*models.Event, error)
+	ListWeekEvents(ctx context.Context, user string, date time.Time) ([]*models.Event, error)
+	ListMonthEvents(ctx context.Context, user string, date time.Time) ([]*models.Event, error)
 	CreateNewEvent(ctx context.Context, newEvent *models.Event) (string, error)
 	RemoveEvent(ctx context.Context, uuid string) error
 	ChangeEvent(ctx context.Context, uuid string, newEvent *models.Event) error
@@ -30,8 +30,8 @@ func NewCalendar(storage EventStorage) (*Calendar, error) {
 }
 
 // ListDayEvents вернет список событий на день
-func (a *Calendar) ListDayEvents(ctx context.Context, date time.Time) ([]*models.Event, error) {
-	events, err := a.storage.ListEvents(ctx, date, date.AddDate(0, 0, 1))
+func (a *Calendar) ListDayEvents(ctx context.Context, user string, date time.Time) ([]*models.Event, error) {
+	events, err := a.storage.ListEvents(ctx, user, date, date.AddDate(0, 0, 1))
 	if err != nil {
 		return nil, err
 	}
@@ -39,8 +39,8 @@ func (a *Calendar) ListDayEvents(ctx context.Context, date time.Time) ([]*models
 }
 
 // ListWeekEvents вернет список событий на неделю
-func (a *Calendar) ListWeekEvents(ctx context.Context, date time.Time) ([]*models.Event, error) {
-	events, err := a.storage.ListEvents(ctx, date, date.AddDate(0, 0, 7))
+func (a *Calendar) ListWeekEvents(ctx context.Context, user string, date time.Time) ([]*models.Event, error) {
+	events, err := a.storage.ListEvents(ctx, user, date, date.AddDate(0, 0, 7))
 	if err != nil {
 		return nil, err
 	}
@@ -48,8 +48,8 @@ func (a *Calendar) ListWeekEvents(ctx context.Context, date time.Time) ([]*model
 }
 
 // ListMonthEvents вернет список событий на месяц
-func (a *Calendar) ListMonthEvents(ctx context.Context, date time.Time) ([]*models.Event, error) {
-	events, err := a.storage.ListEvents(ctx, date, date.AddDate(0, 1, 0))
+func (a *Calendar) ListMonthEvents(ctx context.Context, user string, date time.Time) ([]*models.Event, error) {
+	events, err := a.storage.ListEvents(ctx, user, date, date.AddDate(0, 1, 0))
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +58,7 @@ func (a *Calendar) ListMonthEvents(ctx context.Context, date time.Time) ([]*mode
 
 // CreateNewEvent добавит новое событие
 func (a *Calendar) CreateNewEvent(ctx context.Context, newEvent *models.Event) (string, error) {
-	// this should be like one transaction
-	currentEvents, err := a.storage.ListEvents(ctx, newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
+	currentEvents, err := a.storage.ListEvents(ctx, newEvent.User, newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
 	if err != nil {
 		return "", err
 	}
@@ -79,7 +78,7 @@ func (a *Calendar) RemoveEvent(ctx context.Context, uuid string) error {
 // ChangeEvent изменит событие
 func (a *Calendar) ChangeEvent(ctx context.Context, uuid string, newEvent *models.Event) error {
 	// get events on this day
-	currentEvents, err := a.storage.ListEvents(ctx, newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
+	currentEvents, err := a.storage.ListEvents(ctx, newEvent.User, newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
 	if err != nil {
 		return err
 	}

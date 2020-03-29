@@ -11,7 +11,7 @@ import (
 type StorageStub struct{}
 
 // ListEvents stub for method
-func (s *StorageStub) ListEvents(_ context.Context, _ time.Time) ([]*models.Event, error) {
+func (s *StorageStub) ListEvents(_ context.Context, _ string, _, _ time.Time) ([]*models.Event, error) {
 	return []*models.Event{
 		&models.Event{
 			UUID:         "1",

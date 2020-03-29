@@ -36,19 +36,19 @@ func (es *EventService) ListEvents(ctx context.Context, request *api.ListRequest
 	var events []*models.Event
 	switch request.GetPeriod() {
 	case api.Period_DAY:
-		events, err = es.app.ListDayEvents(ctx, day)
+		events, err = es.app.ListDayEvents(ctx, request.User, day)
 		if err != nil {
 			es.logger.Errorw("error ListDayEvents", "methodName", "ListEvents", "err", err)
 			return nil, err
 		}
 	case api.Period_WEEK:
-		events, err = es.app.ListWeekEvents(ctx, day)
+		events, err = es.app.ListWeekEvents(ctx, request.User, day)
 		if err != nil {
 			es.logger.Errorw("error ListWeekEvents", "methodName", "ListEvents", "err", err)
 			return nil, err
 		}
 	case api.Period_MONTH:
-		events, err = es.app.ListMonthEvents(ctx, day)
+		events, err = es.app.ListMonthEvents(ctx, request.User, day)
 		if err != nil {
 			es.logger.Errorw("error ListMonthEvents", "methodName", "ListEvents", "err", err)
 			return nil, err

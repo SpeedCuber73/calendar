@@ -14,8 +14,8 @@ type StorageMock struct {
 }
 
 // ListEvents мокирует метод
-func (m *StorageMock) ListEvents(ctx context.Context, from, to time.Time) ([]*models.Event, error) {
-	args := m.Called(ctx, from, to)
+func (m *StorageMock) ListEvents(ctx context.Context, user string, from, to time.Time) ([]*models.Event, error) {
+	args := m.Called(ctx, user, from, to)
 	err := args.Error(1)
 	if err != nil {
 		return nil, err

@@ -23,6 +23,7 @@ enum Period {
 message ListRequest {
     google.protobuf.Timestamp date = 1;
     Period period = 2;
+    string user = 3;
 }
 
 message ListResponse {

@@ -2,15 +2,18 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 
 	app "github.com/bobrovka/calendar/internal/calendar-app"
-	stub "github.com/bobrovka/calendar/internal/calendar-app/storage-stub"
+	pg "github.com/bobrovka/calendar/internal/calendar-app/storage-pg"
 	"github.com/bobrovka/calendar/internal/service"
 	"github.com/bobrovka/calendar/pkg/calendar/api"
 	"github.com/heetch/confita"
 	"github.com/heetch/confita/backend/file"
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/jmoiron/sqlx"
 	flag "github.com/spf13/pflag"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -44,6 +47,7 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot read config ", err)
 	}
+	fmt.Println(cfg)
 
 	logCfg := zap.NewDevelopmentConfig()
 	logCfg.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
@@ -63,15 +67,32 @@ func main() {
 		log.Fatalf("cannot listen %s, %v", cfg.HTTPListen, err)
 	}
 
-	grpcServer := grpc.NewServer()
-	reflection.Register(grpcServer)
+	db, err := sqlx.Connect("pgx", fmt.Sprintf(
+		"postgresql://%s:%s@%s:%d/%s?sslmode=disable",
+		cfg.PgUser,
+		cfg.PgPassword,
+		cfg.PgHost,
+		cfg.PgPort,
+		cfg.PgName,
+	))
+	if err != nil {
+		log.Fatalf("cannot connect to db %v", err)
+	}
 
-	app, err := app.NewCalendar(&stub.StorageStub{})
+	storage, err := pg.NewStoragePg(db)
+	if err != nil {
+		log.Fatalf("cannot create storage %v", err)
+	}
+
+	app, err := app.NewCalendar(storage)
 	if err != nil {
 		log.Fatalf("cannot create app instance, %v", err)
 	}
 
 	eventService := service.NewEventService(app, sugaredLogger)
+
+	grpcServer := grpc.NewServer()
+	reflection.Register(grpcServer)
 
 	api.RegisterEventsServer(grpcServer, eventService)
 	_ = grpcServer.Serve(lis)

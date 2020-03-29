@@ -8,11 +8,11 @@ import (
 type Event struct {
 	UUID         string
 	Title        string
-	StartAt      time.Time
+	StartAt      time.Time `db:"start_at"`
 	Duration     time.Duration
-	Description  string
-	User         string
-	NotifyBefore time.Duration
+	Description  string        `db:"descr"`
+	User         string        `db:"user_name"`
+	NotifyBefore time.Duration `db:"notify_before"`
 }
 
 func (e Event) String() string {
