@@ -78,22 +78,17 @@ func (a *Calendar) RemoveEvent(ctx context.Context, uuid string) error {
 // ChangeEvent изменит событие
 func (a *Calendar) ChangeEvent(ctx context.Context, uuid string, newEvent *models.Event) error {
 	// get events on this day
-	currentEvents, err := a.storage.ListEvents(ctx, newEvent.User, newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
+	currentEvents, err := a.storage.ListEvents(ctx, newEvent.User, time.Unix(0, 0), time.Unix(67098285000, 0))
 	if err != nil {
 		return err
 	}
 
-	var found bool
 	// delete an event that is being modified
 	for i, event := range currentEvents {
 		if event.UUID == uuid {
 			currentEvents = append(currentEvents[:i], currentEvents[i+1:]...)
-			found = true
 			break
 		}
-	}
-	if !found {
-		return ErrNotFound
 	}
 
 	// if no free time - abort changing

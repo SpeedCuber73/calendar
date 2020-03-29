@@ -8,3 +8,6 @@ CREATE TABLE IF NOT EXISTS events(
     notify_before bigint,
     CONSTRAINT events_pkey PRIMARY KEY (uuid)
 );
+
+CREATE INDEX ON events (start_at);
+CREATE index ON events USING HASH(user_name);

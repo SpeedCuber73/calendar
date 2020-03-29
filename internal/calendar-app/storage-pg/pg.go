@@ -55,10 +55,28 @@ func (pg *StoragePg) CreateEvent(ctx context.Context, event *models.Event) (stri
 	return uuid.String(), nil
 }
 
-func (pg *StoragePg) UpdateEvent(ctx context.Context, id string, event *models.Event) error {
-	panic("not implemented") // TODO: Implement
+func (pg *StoragePg) UpdateEvent(ctx context.Context, uuid string, event *models.Event) error {
+	_, err := pg.db.ExecContext(ctx, `UPDATE events 
+	SET title=$1, 
+	start_at=$2, 
+	duration=$3, 
+	descr=$4, 
+	user_name=$5, 
+	notify_before=$6 
+	WHERE uuid=$7`, event.Title, event.StartAt, event.Duration, event.Description, event.User, event.NotifyBefore, uuid)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (pg *StoragePg) DeleteEvent(ctx context.Context, id string) error {
-	panic("not implemented") // TODO: Implement
+func (pg *StoragePg) DeleteEvent(ctx context.Context, uuid string) error {
+	_, err := pg.db.ExecContext(ctx, `DELETE FROM events 
+	WHERE uuid=$1`, uuid)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
