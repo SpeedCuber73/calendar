@@ -70,7 +70,7 @@ func (es *EventService) ListEvents(ctx context.Context, request *api.ListRequest
 			Duration:     ptypes.DurationProto(event.Duration),
 			Description:  event.Description,
 			User:         event.User,
-			NotifyBefore: ptypes.DurationProto(event.Duration),
+			NotifyBefore: ptypes.DurationProto(event.NotifyBefore),
 		})
 	}
 
@@ -102,14 +102,16 @@ func (es *EventService) CreateEvent(ctx context.Context, request *api.CreateRequ
 		return nil, err
 	}
 
-	uuid, err := es.app.CreateNewEvent(ctx, &models.Event{
+	e := &models.Event{
 		Title:        newEvent.GetTitle(),
 		StartAt:      startAt,
 		Duration:     duration,
 		Description:  newEvent.GetDescription(),
 		User:         newEvent.GetUser(),
 		NotifyBefore: notifyBefore,
-	})
+	}
+
+	uuid, err := es.app.CreateNewEvent(ctx, e)
 	if err != nil {
 		es.logger.Errorw("error CreateNewEvent", "methodName", "CreateEvent", "err", err)
 		return nil, err

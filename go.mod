@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/golang/protobuf v1.3.5
+	github.com/google/uuid v1.1.1
 	github.com/heetch/confita v0.8.0
 	github.com/jackc/pgx/v4 v4.5.0
 	github.com/jmoiron/sqlx v1.2.0

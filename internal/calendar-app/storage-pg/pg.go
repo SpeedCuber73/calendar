@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bobrovka/calendar/internal/models"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -19,7 +20,6 @@ func NewStoragePg(db *sqlx.DB) (*StoragePg, error) {
 }
 
 func (pg *StoragePg) ListEvents(ctx context.Context, user string, from time.Time, to time.Time) ([]*models.Event, error) {
-	// insert into events values ('1', 'title', '2020-03-30 04:05:06', 3600000000000, '', 'Kira', 3600000000000);
 	rows, err := pg.db.QueryxContext(ctx, `SELECT uuid, title, start_at, duration, descr, user_name, notify_before
 	FROM events
 	WHERE user_name=$1 AND $2<start_at AND start_at<$3`, user, from, to)
@@ -41,7 +41,18 @@ func (pg *StoragePg) ListEvents(ctx context.Context, user string, from time.Time
 }
 
 func (pg *StoragePg) CreateEvent(ctx context.Context, event *models.Event) (string, error) {
-	panic("not implemented") // TODO: Implement
+	uuid, err := uuid.NewUUID()
+	if err != nil {
+		return "", nil
+	}
+
+	_, err = pg.db.ExecContext(ctx, `INSERT INTO events 
+	VALUES ($1, $2, $3, $4, $5, $6, $7)`, uuid.String(), event.Title, event.StartAt, event.Duration, event.Description, event.User, event.NotifyBefore)
+	if err != nil {
+		return "", err
+	}
+
+	return uuid.String(), nil
 }
 
 func (pg *StoragePg) UpdateEvent(ctx context.Context, id string, event *models.Event) error {

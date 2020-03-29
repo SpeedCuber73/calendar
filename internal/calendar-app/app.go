@@ -58,7 +58,7 @@ func (a *Calendar) ListMonthEvents(ctx context.Context, user string, date time.T
 
 // CreateNewEvent добавит новое событие
 func (a *Calendar) CreateNewEvent(ctx context.Context, newEvent *models.Event) (string, error) {
-	currentEvents, err := a.storage.ListEvents(ctx, newEvent.User, newEvent.StartAt, newEvent.StartAt.AddDate(0, 0, 1))
+	currentEvents, err := a.storage.ListEvents(ctx, newEvent.User, time.Unix(0, 0), time.Unix(67098285000, 0))
 	if err != nil {
 		return "", err
 	}
