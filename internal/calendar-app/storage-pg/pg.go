@@ -9,16 +9,19 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// StoragePg ...
 type StoragePg struct {
 	db *sqlx.DB
 }
 
+// NewStoragePg ...
 func NewStoragePg(db *sqlx.DB) (*StoragePg, error) {
 	return &StoragePg{
 		db: db,
 	}, nil
 }
 
+// ListEvents ...
 func (pg *StoragePg) ListEvents(ctx context.Context, user string, from time.Time, to time.Time) ([]*models.Event, error) {
 	rows, err := pg.db.QueryxContext(ctx, `SELECT uuid, title, start_at, duration, descr, user_name, notify_before
 	FROM events
@@ -40,6 +43,7 @@ func (pg *StoragePg) ListEvents(ctx context.Context, user string, from time.Time
 	return events, nil
 }
 
+// CreateEvent ...
 func (pg *StoragePg) CreateEvent(ctx context.Context, event *models.Event) (string, error) {
 	uuid, err := uuid.NewUUID()
 	if err != nil {
@@ -55,6 +59,7 @@ func (pg *StoragePg) CreateEvent(ctx context.Context, event *models.Event) (stri
 	return uuid.String(), nil
 }
 
+// UpdateEvent ...
 func (pg *StoragePg) UpdateEvent(ctx context.Context, uuid string, event *models.Event) error {
 	_, err := pg.db.ExecContext(ctx, `UPDATE events 
 	SET title=$1, 
@@ -71,6 +76,7 @@ func (pg *StoragePg) UpdateEvent(ctx context.Context, uuid string, event *models
 	return nil
 }
 
+// DeleteEvent ...
 func (pg *StoragePg) DeleteEvent(ctx context.Context, uuid string) error {
 	_, err := pg.db.ExecContext(ctx, `DELETE FROM events 
 	WHERE uuid=$1`, uuid)
