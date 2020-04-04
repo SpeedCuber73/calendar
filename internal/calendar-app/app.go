@@ -135,14 +135,14 @@ func (a *Calendar) RunScheduler(ctx context.Context, ch *amqp.Channel) error {
 				func() {
 					events, err := a.storage.PopNotifications(ctx)
 					if err != nil {
-						a.logger.Warnw("error get notifications", "MethodName", "checkNotifications", "err", err)
+						a.logger.Warnw("error get notifications", "MethodName", "RunScheduler", "err", err)
 						return
 					}
 
 					for _, e := range events {
 						body, err := json.Marshal(e)
 						if err != nil {
-							a.logger.Warnw("error marshal event", "MethodName", "checkNotifications", "err", err)
+							a.logger.Warnw("error marshal event", "MethodName", "RunScheduler", "err", err)
 							return
 						}
 
