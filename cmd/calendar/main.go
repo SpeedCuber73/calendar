@@ -88,6 +88,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("cannot create app instance, %v", err)
 	}
+	err = app.RunScheduler(context.Background())
+	if err != nil {
+		log.Fatal("cant start scheduler ", err)
+	}
 
 	eventService := service.NewEventService(app, sugaredLogger)
 

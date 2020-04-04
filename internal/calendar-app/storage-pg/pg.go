@@ -9,6 +9,16 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type event struct {
+	UUID        string
+	Title       string
+	StartAt     time.Time `db:"start_at"`
+	Duration    time.Duration
+	Description string    `db:"descr"`
+	User        string    `db:"user_name"`
+	NotifyAt    time.Time `db:"notify_at"`
+}
+
 // StoragePg ...
 type StoragePg struct {
 	db *sqlx.DB
@@ -23,7 +33,7 @@ func NewStoragePg(db *sqlx.DB) (*StoragePg, error) {
 
 // ListEvents ...
 func (pg *StoragePg) ListEvents(ctx context.Context, user string, from time.Time, to time.Time) ([]*models.Event, error) {
-	rows, err := pg.db.QueryxContext(ctx, `SELECT uuid, title, start_at, duration, descr, user_name, notify_before
+	rows, err := pg.db.QueryxContext(ctx, `SELECT uuid, title, start_at, duration, descr, user_name, notify_at
 	FROM events
 	WHERE user_name=$1 AND $2<start_at AND start_at<$3`, user, from, to)
 	if err != nil {
@@ -32,12 +42,13 @@ func (pg *StoragePg) ListEvents(ctx context.Context, user string, from time.Time
 
 	var events []*models.Event
 	for rows.Next() {
-		var e models.Event
+		var e event
 		err = rows.StructScan(&e)
 		if err != nil {
 			return nil, err
 		}
-		events = append(events, &e)
+
+		events = append(events, toEventModel(&e))
 	}
 
 	return events, nil
@@ -51,7 +62,7 @@ func (pg *StoragePg) CreateEvent(ctx context.Context, event *models.Event) (stri
 	}
 
 	_, err = pg.db.ExecContext(ctx, `INSERT INTO events 
-	VALUES ($1, $2, $3, $4, $5, $6, $7)`, uuid.String(), event.Title, event.StartAt, event.Duration, event.Description, event.User, event.NotifyBefore)
+	VALUES ($1, $2, $3, $4, $5, $6, $7)`, uuid.String(), event.Title, event.StartAt, event.Duration, event.Description, event.User, event.StartAt.Add(-event.NotifyBefore))
 	if err != nil {
 		return "", err
 	}
@@ -67,8 +78,8 @@ func (pg *StoragePg) UpdateEvent(ctx context.Context, uuid string, event *models
 	duration=$3, 
 	descr=$4, 
 	user_name=$5, 
-	notify_before=$6 
-	WHERE uuid=$7`, event.Title, event.StartAt, event.Duration, event.Description, event.User, event.NotifyBefore, uuid)
+	notify_at=$6 
+	WHERE uuid=$7`, event.Title, event.StartAt, event.Duration, event.Description, event.User, event.StartAt.Add(-event.NotifyBefore), uuid)
 	if err != nil {
 		return err
 	}
@@ -85,4 +96,59 @@ func (pg *StoragePg) DeleteEvent(ctx context.Context, uuid string) error {
 	}
 
 	return nil
+}
+
+func (pg *StoragePg) PopNotifications(ctx context.Context) ([]*models.Event, error) {
+	tx, err := pg.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := tx.QueryxContext(ctx, `SELECT uuid, title, start_at, duration, descr, user_name 
+	FROM events
+	WHERE notified != true AND notify_at<now()`)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	var events []*models.Event
+	for rows.Next() {
+		var e models.Event
+		err = rows.StructScan(&e)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+
+		events = append(events, &e)
+	}
+
+	for _, e := range events {
+		_, err := tx.ExecContext(ctx, "UPDATE events SET notified=true WHERE uuid=$1", e.UUID)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	return events, nil
+}
+
+func toEventModel(e *event) *models.Event {
+	return &models.Event{
+		UUID:         e.UUID,
+		Title:        e.Title,
+		StartAt:      e.StartAt,
+		Duration:     e.Duration,
+		Description:  e.Description,
+		User:         e.User,
+		NotifyBefore: e.StartAt.Sub(e.NotifyAt),
+	}
 }

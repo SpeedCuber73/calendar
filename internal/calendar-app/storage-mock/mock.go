@@ -46,3 +46,13 @@ func (m *StorageMock) DeleteEvent(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
+
+func (m *StorageMock) PopNotifications(ctx context.Context) ([]*models.Event, error) {
+	args := m.Called(ctx)
+	err := args.Error(1)
+	if err != nil {
+		return nil, err
+	}
+
+	return args.Get(0).([]*models.Event), err
+}

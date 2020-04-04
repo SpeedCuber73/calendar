@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS events(
     duration      bigint       NOT NULL,
     descr         text,
     user_name     text      NOT NULL,
-    notify_before bigint,
+    notify_at     timestamp,
+    notified      boolean default false,
     CONSTRAINT events_pkey PRIMARY KEY (uuid)
 );
 

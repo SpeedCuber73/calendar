@@ -13,4 +13,6 @@ type EventStorage interface {
 	CreateEvent(ctx context.Context, event *models.Event) (string, error)
 	UpdateEvent(ctx context.Context, id string, event *models.Event) error
 	DeleteEvent(ctx context.Context, id string) error
+
+	PopNotifications(ctx context.Context) ([]*models.Event, error)
 }

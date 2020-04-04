@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/bobrovka/calendar/internal/models"
@@ -15,6 +16,8 @@ type App interface {
 	CreateNewEvent(ctx context.Context, newEvent *models.Event) (string, error)
 	RemoveEvent(ctx context.Context, uuid string) error
 	ChangeEvent(ctx context.Context, uuid string, newEvent *models.Event) error
+
+	RunScheduler(ctx context.Context) error
 }
 
 // Calendar сущность, описывающая бизнес-логику сервиса
@@ -23,7 +26,7 @@ type Calendar struct {
 }
 
 // NewCalendar создает новый инстанс приложения
-func NewCalendar(storage EventStorage) (*Calendar, error) {
+func NewCalendar(storage EventStorage) (App, error) {
 	return &Calendar{
 		storage: storage,
 	}, nil
@@ -97,6 +100,33 @@ func (a *Calendar) ChangeEvent(ctx context.Context, uuid string, newEvent *model
 	}
 
 	return a.storage.UpdateEvent(ctx, uuid, newEvent)
+}
+
+func (a *Calendar) RunScheduler(ctx context.Context) error {
+	ticker := time.NewTicker(5 * time.Second)
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				a.checkNotifications(ctx)
+			}
+		}
+	}()
+
+	return nil
+}
+
+func (a *Calendar) checkNotifications(ctx context.Context) error {
+	fmt.Println("Checking...")
+	events, err := a.storage.PopNotifications(ctx)
+	if err != nil {
+		fmt.Println("err ", err)
+	}
+	fmt.Println(events)
+	return nil
 }
 
 func hasFreeTime(existingEvents []*models.Event, start, end time.Time) bool {
