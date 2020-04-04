@@ -2,10 +2,12 @@ package app
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"time"
 
 	"github.com/bobrovka/calendar/internal/models"
+	"github.com/streadway/amqp"
+	"go.uber.org/zap"
 )
 
 // App интерфейс приложения
@@ -17,18 +19,20 @@ type App interface {
 	RemoveEvent(ctx context.Context, uuid string) error
 	ChangeEvent(ctx context.Context, uuid string, newEvent *models.Event) error
 
-	RunScheduler(ctx context.Context) error
+	RunScheduler(ctx context.Context, ch *amqp.Channel) error
 }
 
 // Calendar сущность, описывающая бизнес-логику сервиса
 type Calendar struct {
 	storage EventStorage
+	logger  *zap.SugaredLogger
 }
 
 // NewCalendar создает новый инстанс приложения
-func NewCalendar(storage EventStorage) (App, error) {
+func NewCalendar(storage EventStorage, logger *zap.SugaredLogger) (App, error) {
 	return &Calendar{
 		storage: storage,
+		logger:  logger,
 	}, nil
 }
 
@@ -86,12 +90,17 @@ func (a *Calendar) ChangeEvent(ctx context.Context, uuid string, newEvent *model
 		return err
 	}
 
+	var found bool
 	// delete an event that is being modified
 	for i, event := range currentEvents {
 		if event.UUID == uuid {
 			currentEvents = append(currentEvents[:i], currentEvents[i+1:]...)
+			found = true
 			break
 		}
+	}
+	if !found {
+		return ErrNotFound
 	}
 
 	// if no free time - abort changing
@@ -102,8 +111,20 @@ func (a *Calendar) ChangeEvent(ctx context.Context, uuid string, newEvent *model
 	return a.storage.UpdateEvent(ctx, uuid, newEvent)
 }
 
-func (a *Calendar) RunScheduler(ctx context.Context) error {
+func (a *Calendar) RunScheduler(ctx context.Context, ch *amqp.Channel) error {
 	ticker := time.NewTicker(5 * time.Second)
+
+	q, err := ch.QueueDeclare(
+		"notifications", // name
+		false,           // durable
+		false,           // delete when unused
+		false,           // exclusive
+		false,           // no-wait
+		nil,             // arguments
+	)
+	if err != nil {
+		return err
+	}
 
 	go func() {
 		for {
@@ -111,21 +132,36 @@ func (a *Calendar) RunScheduler(ctx context.Context) error {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				a.checkNotifications(ctx)
+				func() {
+					events, err := a.storage.PopNotifications(ctx)
+					if err != nil {
+						a.logger.Warnw("error get notifications", "MethodName", "checkNotifications", "err", err)
+						return
+					}
+
+					for _, e := range events {
+						body, err := json.Marshal(e)
+						if err != nil {
+							a.logger.Warnw("error marshal event", "MethodName", "checkNotifications", "err", err)
+							return
+						}
+
+						err = ch.Publish(
+							"",     // exchange
+							q.Name, // routing key
+							false,  // mandatory
+							false,  // immediate
+							amqp.Publishing{
+								ContentType: "application/json",
+								Body:        []byte(body),
+							},
+						)
+					}
+				}()
 			}
 		}
 	}()
 
-	return nil
-}
-
-func (a *Calendar) checkNotifications(ctx context.Context) error {
-	fmt.Println("Checking...")
-	events, err := a.storage.PopNotifications(ctx)
-	if err != nil {
-		fmt.Println("err ", err)
-	}
-	fmt.Println(events)
 	return nil
 }
 

@@ -9,6 +9,7 @@ require (
 	github.com/jackc/pgx/v4 v4.5.0
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/spf13/pflag v1.0.5
+	github.com/streadway/amqp v0.0.0-20200108173154-1c71cc93ed71
 	github.com/stretchr/testify v1.5.1
 	go.uber.org/zap v1.12.0
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a

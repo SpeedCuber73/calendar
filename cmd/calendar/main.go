@@ -15,6 +15,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
 	flag "github.com/spf13/pflag"
+	"github.com/streadway/amqp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
@@ -44,9 +45,7 @@ func main() {
 	)
 
 	err := loader.Load(context.Background(), &cfg)
-	if err != nil {
-		log.Fatal("cannot read config ", err)
-	}
+	failOnError(err, "cannot read config")
 	fmt.Println(cfg)
 
 	logCfg := zap.NewDevelopmentConfig()
@@ -55,17 +54,13 @@ func main() {
 	logCfg.OutputPaths = []string{cfg.LogFile}
 
 	logger, err := logCfg.Build()
-	if err != nil {
-		log.Fatal("cant create logger ", err)
-	}
+	failOnError(err, "cant create logger")
 	defer logger.Sync()
 
 	sugaredLogger := logger.Sugar()
 
 	lis, err := net.Listen("tcp", cfg.HTTPListen)
-	if err != nil {
-		log.Fatalf("cannot listen %s, %v", cfg.HTTPListen, err)
-	}
+	failOnError(err, fmt.Sprint("cannot listen ", cfg.HTTPListen))
 
 	db, err := sqlx.Connect("pgx", fmt.Sprintf(
 		"postgresql://%s:%s@%s:%d/%s?sslmode=disable",
@@ -75,23 +70,17 @@ func main() {
 		cfg.PgPort,
 		cfg.PgName,
 	))
-	if err != nil {
-		log.Fatalf("cannot connect to db %v", err)
-	}
+	failOnError(err, "cannot connect to db")
 
 	storage, err := pg.NewStoragePg(db)
-	if err != nil {
-		log.Fatalf("cannot create storage %v", err)
-	}
+	failOnError(err, "cannot create storage")
 
-	app, err := app.NewCalendar(storage)
-	if err != nil {
-		log.Fatalf("cannot create app instance, %v", err)
-	}
-	err = app.RunScheduler(context.Background())
-	if err != nil {
-		log.Fatal("cant start scheduler ", err)
-	}
+	app, err := app.NewCalendar(storage, sugaredLogger)
+	failOnError(err, "cannot create app instance")
+
+	ch := getMQChannel()
+	err = app.RunScheduler(context.Background(), ch)
+	failOnError(err, "cant start scheduler")
 
 	eventService := service.NewEventService(app, sugaredLogger)
 
@@ -100,4 +89,20 @@ func main() {
 
 	api.RegisterEventsServer(grpcServer, eventService)
 	_ = grpcServer.Serve(lis)
+}
+
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+	}
+}
+
+func getMQChannel() *amqp.Channel {
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	failOnError(err, "cant connect to RabbitMQ")
+
+	ch, err := conn.Channel()
+	failOnError(err, "cant get channel on RabbitMQ")
+
+	return ch
 }

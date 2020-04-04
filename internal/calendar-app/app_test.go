@@ -59,10 +59,10 @@ func TestApp_CreateEvent(t *testing.T) {
 	for k, v := range testCases {
 		t.Run(k, func(t *testing.T) {
 			storage := &mock.StorageMock{}
-			app, err := NewCalendar(storage)
+			app, err := NewCalendar(storage, nil)
 			assert.NoError(t, err)
 
-			storage.On("ListEvents", context.Background(), v.newEvent.User, v.newEvent.StartAt, v.newEvent.StartAt.AddDate(0, 0, 1)).Return(v.listEventsResponse, nil)
+			storage.On("ListEvents", context.Background(), v.newEvent.User, time.Unix(0, 0), time.Unix(67098285000, 0)).Return(v.listEventsResponse, nil)
 			if v.expErr == nil {
 				storage.On("CreateEvent", context.Background(), v.newEvent).Return(v.expUUID, nil)
 			}
@@ -180,10 +180,10 @@ func TestApp_ChangeEvent(t *testing.T) {
 	for k, v := range testCases {
 		t.Run(k, func(t *testing.T) {
 			storage := &mock.StorageMock{}
-			app, err := NewCalendar(storage)
+			app, err := NewCalendar(storage, nil)
 			assert.NoError(t, err)
 
-			storage.On("ListEvents", context.Background(), v.newEvent.User, v.newEvent.StartAt, v.newEvent.StartAt.AddDate(0, 0, 1)).Return(v.listEventsResponse, nil)
+			storage.On("ListEvents", context.Background(), v.newEvent.User, time.Unix(0, 0), time.Unix(67098285000, 0)).Return(v.listEventsResponse, nil)
 			if v.expErr == nil {
 				storage.On("UpdateEvent", context.Background(), v.uuid, v.newEvent).Return(nil)
 			}
