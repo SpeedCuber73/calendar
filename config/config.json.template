@@ -1,6 +1,7 @@
 {
     "HTTPListen": "127.0.0.1:50051",
     "LogFile": "log",
+    "LogFileSender": "sender",
     "LogLevel": "debug",
     "PgName": "calendar",
     "PgHost": "localhost",
