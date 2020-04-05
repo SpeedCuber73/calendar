@@ -6,5 +6,9 @@
     "PgHost": "localhost",
     "PgPort": 5432,
     "PgUser": "postgres",
-    "PgPassword": "password"
+    "PgPassword": "password",
+    "RabbitHost": "localhost",
+	"RabbitPort": 5672,
+	"RabbitUser": "guest",
+	"RabbitPassword": "guest"
 }

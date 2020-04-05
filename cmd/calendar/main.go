@@ -79,7 +79,13 @@ func main() {
 	app, err := app.NewCalendar(storage, sugaredLogger)
 	failOnError(err, "cannot create app instance")
 
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := amqp.Dial(fmt.Sprintf(
+		"amqp://%s:%s@%s:%d",
+		cfg.RabbitUser,
+		cfg.RabbitPassword,
+		cfg.RabbitHost,
+		cfg.RabbitPort,
+	))
 	failOnError(err, "cant connect to RabbitMQ")
 	defer conn.Close()
 
