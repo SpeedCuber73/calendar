@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 
+	"github.com/bobrovka/calendar/internal"
 	app "github.com/bobrovka/calendar/internal/calendar-app"
 	pg "github.com/bobrovka/calendar/internal/calendar-app/storage-pg"
 	"github.com/bobrovka/calendar/internal/service"
@@ -35,7 +36,7 @@ func main() {
 		log.Fatal("no config file")
 	}
 
-	cfg := app.Config{
+	cfg := internal.Config{
 		HTTPListen: "127.0.0.1:50051",
 		LogLevel:   "debug",
 	}
@@ -78,7 +79,14 @@ func main() {
 	app, err := app.NewCalendar(storage, sugaredLogger)
 	failOnError(err, "cannot create app instance")
 
-	ch := getMQChannel()
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	failOnError(err, "cant connect to RabbitMQ")
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	failOnError(err, "cant get channel on RabbitMQ")
+	defer ch.Close()
+
 	err = app.RunScheduler(context.Background(), ch)
 	failOnError(err, "cant start scheduler")
 
@@ -95,14 +103,4 @@ func failOnError(err error, msg string) {
 	if err != nil {
 		log.Fatalf("%s: %s", msg, err)
 	}
-}
-
-func getMQChannel() *amqp.Channel {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
-	failOnError(err, "cant connect to RabbitMQ")
-
-	ch, err := conn.Channel()
-	failOnError(err, "cant get channel on RabbitMQ")
-
-	return ch
 }
