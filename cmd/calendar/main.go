@@ -14,7 +14,6 @@ import (
 	"github.com/heetch/confita"
 	"github.com/heetch/confita/backend/file"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/jmoiron/sqlx"
 	flag "github.com/spf13/pflag"
 	"github.com/streadway/amqp"
 	"go.uber.org/zap"
@@ -63,17 +62,7 @@ func main() {
 	lis, err := net.Listen("tcp", cfg.HTTPListen)
 	failOnError(err, fmt.Sprint("cannot listen ", cfg.HTTPListen))
 
-	db, err := sqlx.Connect("pgx", fmt.Sprintf(
-		"postgresql://%s:%s@%s:%d/%s?sslmode=disable",
-		cfg.PgUser,
-		cfg.PgPassword,
-		cfg.PgHost,
-		cfg.PgPort,
-		cfg.PgName,
-	))
-	failOnError(err, "cannot connect to db")
-
-	storage, err := pg.NewStoragePg(db)
+	storage, err := pg.NewStoragePg(cfg.PgUser, cfg.PgPassword, cfg.PgHost, cfg.PgPort, cfg.PgName)
 	failOnError(err, "cannot create storage")
 
 	app, err := app.NewCalendar(storage, sugaredLogger)

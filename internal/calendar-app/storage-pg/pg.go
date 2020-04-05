@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/bobrovka/calendar/internal/models"
@@ -25,7 +26,19 @@ type StoragePg struct {
 }
 
 // NewStoragePg ...
-func NewStoragePg(db *sqlx.DB) (*StoragePg, error) {
+func NewStoragePg(user, password, host string, port int, name string) (*StoragePg, error) {
+	db, err := sqlx.Connect("pgx", fmt.Sprintf(
+		"postgresql://%s:%s@%s:%d/%s?sslmode=disable",
+		user,
+		password,
+		host,
+		port,
+		name,
+	))
+	if err != nil {
+		return nil, err
+	}
+
 	return &StoragePg{
 		db: db,
 	}, nil
