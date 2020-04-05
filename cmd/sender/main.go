@@ -78,7 +78,7 @@ func main() {
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		true,   // auto-ack
+		false,  // auto-ack
 		false,  // exclusive
 		false,  // no-local
 		false,  // no-wait
@@ -92,6 +92,7 @@ func main() {
 			var e models.Event
 			json.Unmarshal(d.Body, &e)
 			logger.Info(fmt.Sprintf("Notification to %s\n%s at %v", e.User, e.Title, e.StartAt))
+			d.Ack(false)
 		}
 	}()
 
