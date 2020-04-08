@@ -31,22 +31,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	if configPath == "" {
-		log.Fatal("no config file")
-	}
-
-	cfg := internal.Config{
-		HTTPListen: "127.0.0.1:50051",
-		LogLevel:   "debug",
-	}
-
-	loader := confita.NewLoader(
-		file.NewBackend(configPath),
-	)
-
-	err := loader.Load(context.Background(), &cfg)
-	failOnError(err, "cannot read config")
-	fmt.Println(cfg)
+	cfg := getConfig()
 
 	logCfg := zap.NewDevelopmentConfig()
 	logCfg.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
@@ -98,4 +83,24 @@ func failOnError(err error, msg string) {
 	if err != nil {
 		log.Fatalf("%s: %s", msg, err)
 	}
+}
+
+func getConfig() *internal.Config {
+	if configPath == "" {
+		log.Fatal("no config file")
+	}
+
+	cfg := &internal.Config{
+		HTTPListen: "127.0.0.1:50051",
+		LogLevel:   "debug",
+	}
+
+	loader := confita.NewLoader(
+		file.NewBackend(configPath),
+	)
+
+	err := loader.Load(context.Background(), cfg)
+	failOnError(err, "cannot read config")
+	fmt.Println(cfg)
+	return cfg
 }
