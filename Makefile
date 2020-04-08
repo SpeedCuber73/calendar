@@ -21,3 +21,11 @@ compile.calendar:
 
 compile.sender:
 	go build -o sender cmd/sender/main.go
+
+compile.scheduler:
+	go build -o scheduler cmd/scheduler/main.go
+
+build:
+	make compile.calendar
+	make compile.sender
+	make compile.scheduler

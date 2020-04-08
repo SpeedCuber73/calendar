@@ -4,21 +4,16 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
 
 	"github.com/bobrovka/calendar/internal"
 	app "github.com/bobrovka/calendar/internal/calendar-app"
 	pg "github.com/bobrovka/calendar/internal/calendar-app/storage-pg"
-	"github.com/bobrovka/calendar/internal/service"
-	"github.com/bobrovka/calendar/pkg/calendar/api"
 	"github.com/heetch/confita"
 	"github.com/heetch/confita/backend/file"
-	_ "github.com/jackc/pgx/v4/stdlib"
 	flag "github.com/spf13/pflag"
+	"github.com/streadway/amqp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 var configPath string
@@ -35,7 +30,7 @@ func main() {
 	logCfg := zap.NewDevelopmentConfig()
 	logCfg.EncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 	logCfg.EncoderConfig.EncodeTime = zapcore.EpochMillisTimeEncoder
-	logCfg.OutputPaths = []string{cfg.LogFile}
+	logCfg.OutputPaths = []string{cfg.LogFileSender}
 
 	logger, err := logCfg.Build()
 	failOnError(err, "cant create logger")
@@ -43,22 +38,31 @@ func main() {
 
 	sugaredLogger := logger.Sugar()
 
-	lis, err := net.Listen("tcp", cfg.HTTPListen)
-	failOnError(err, fmt.Sprint("cannot listen ", cfg.HTTPListen))
-
 	storage, err := pg.NewStoragePg(cfg.PgUser, cfg.PgPassword, cfg.PgHost, cfg.PgPort, cfg.PgName)
 	failOnError(err, "cannot create storage")
 
 	app, err := app.NewCalendar(storage, sugaredLogger)
 	failOnError(err, "cannot create app instance")
 
-	eventService := service.NewEventService(app, sugaredLogger)
+	conn, err := amqp.Dial(fmt.Sprintf(
+		"amqp://%s:%s@%s:%d",
+		cfg.RabbitUser,
+		cfg.RabbitPassword,
+		cfg.RabbitHost,
+		cfg.RabbitPort,
+	))
+	failOnError(err, "cant connect to RabbitMQ")
+	defer conn.Close()
 
-	grpcServer := grpc.NewServer()
-	reflection.Register(grpcServer)
+	ch, err := conn.Channel()
+	failOnError(err, "cant get channel on RabbitMQ")
+	defer ch.Close()
 
-	api.RegisterEventsServer(grpcServer, eventService)
-	_ = grpcServer.Serve(lis)
+	err = app.RunScheduler(context.Background(), ch)
+	failOnError(err, "cant start scheduler")
+
+	c := make(chan struct{})
+	<-c
 }
 
 func failOnError(err error, msg string) {

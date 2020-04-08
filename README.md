@@ -6,5 +6,4 @@
 * make rabbit.run
 
 ## compile apps
-* make compile.calendar
-* make compile.sender
+* make build
