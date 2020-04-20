@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	flag "github.com/spf13/pflag"
 
@@ -71,19 +75,34 @@ func main() {
 		nil,    // args
 	)
 
-	forever := make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
 
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
-		for d := range msgs {
-			var e models.Event
-			json.Unmarshal(d.Body, &e)
-			logger.Info(fmt.Sprintf("Notification to %s\n%s at %v", e.User, e.Title, e.StartAt))
-			d.Ack(false)
+		for {
+			select {
+			case msg := <-msgs:
+				var e models.Event
+				json.Unmarshal(msg.Body, &e)
+				logger.Info(fmt.Sprintf("Notification to %s\n%s at %v", e.User, e.Title, e.StartAt))
+				msg.Ack(false)
+			case <-ctx.Done():
+				wg.Done()
+				return
+			}
 		}
 	}()
 
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-	<-forever
+	termChan := make(chan os.Signal)
+	signal.Notify(termChan, syscall.SIGINT, syscall.SIGTERM)
+
+	<-termChan
+
+	cancel()
+	wg.Wait()
+
+	fmt.Println("Sender stopped")
 }
 
 func failOnError(err error, msg string) {

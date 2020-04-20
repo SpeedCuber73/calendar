@@ -10,6 +10,7 @@ import (
 	pg "github.com/bobrovka/calendar/internal/calendar-app/storage-pg"
 	"github.com/heetch/confita"
 	"github.com/heetch/confita/backend/file"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	flag "github.com/spf13/pflag"
 	"github.com/streadway/amqp"
 	"go.uber.org/zap"
