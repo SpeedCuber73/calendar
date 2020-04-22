@@ -56,7 +56,11 @@ func main() {
 		err := mqConsumer.Handle(ctx, wg, func(msgs <-chan amqp.Delivery) {
 			for {
 				select {
-				case msg := <-msgs:
+				case msg, ok := <-msgs:
+					// если закроется канал, завершить обработчик
+					if !ok {
+						return
+					}
 					var e models.Event
 					err := json.Unmarshal(msg.Body, &e)
 					if err != nil {
@@ -67,6 +71,7 @@ func main() {
 						msg.Ack(false)
 					}
 				case <-ctx.Done():
+					// если завершается программа, завершить обработчик
 					return
 				}
 			}
@@ -81,6 +86,9 @@ func main() {
 
 	cancel()
 	wg.Wait()
+
+	err = mqConsumer.GracefulStop()
+	failOnError(err, "connot gracefully stop consumer")
 
 	fmt.Println("Sender stopped")
 }

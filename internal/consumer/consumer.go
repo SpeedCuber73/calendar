@@ -176,15 +176,32 @@ func (c *Consumer) Handle(ctx context.Context, wg *sync.WaitGroup, fn func(<-cha
 			}()
 		}
 
-		if <-c.done != nil {
-			msgs, err = c.reConnect()
+		select {
+		case err := <-c.done:
 			if err != nil {
-				return fmt.Errorf("Reconnecting Error: %s", err)
+				msgs, err = c.reConnect()
+				if err != nil {
+					return fmt.Errorf("Reconnecting Error: %s", err)
+				}
+			} else {
+				return nil
 			}
-		} else {
+		case <-ctx.Done():
 			return nil
 		}
 
 		fmt.Println("Reconnected...")
 	}
+}
+
+func (c *Consumer) GracefulStop() error {
+	err := c.channel.Close()
+	if err != nil {
+		return err
+	}
+	err = c.conn.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }
