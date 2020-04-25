@@ -65,10 +65,12 @@ func (s *Scheduler) Run() error {
 		close(s.finished)
 	}()
 
-	ticker := time.NewTicker(5 * time.Second)
-
 	s.wg.Add(1)
 	defer s.wg.Done()
+
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
 	for {
 		select {
 		case err := <-s.finished:
