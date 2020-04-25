@@ -2,11 +2,9 @@ package app
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
 	"github.com/bobrovka/calendar/internal/models"
-	"github.com/streadway/amqp"
 	"go.uber.org/zap"
 )
 
@@ -18,8 +16,6 @@ type App interface {
 	CreateNewEvent(ctx context.Context, newEvent *models.Event) (string, error)
 	RemoveEvent(ctx context.Context, uuid string) error
 	ChangeEvent(ctx context.Context, uuid string, newEvent *models.Event) error
-
-	RunScheduler(ctx context.Context, ch *amqp.Channel) error
 }
 
 // Calendar сущность, описывающая бизнес-логику сервиса
@@ -109,60 +105,6 @@ func (a *Calendar) ChangeEvent(ctx context.Context, uuid string, newEvent *model
 	}
 
 	return a.storage.UpdateEvent(ctx, uuid, newEvent)
-}
-
-func (a *Calendar) RunScheduler(ctx context.Context, ch *amqp.Channel) error {
-	ticker := time.NewTicker(5 * time.Second)
-
-	q, err := ch.QueueDeclare(
-		"notifications", // name
-		false,           // durable
-		false,           // delete when unused
-		false,           // exclusive
-		false,           // no-wait
-		nil,             // arguments
-	)
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				func() {
-					events, err := a.storage.PopNotifications(ctx)
-					if err != nil {
-						a.logger.Warnw("error get notifications", "MethodName", "RunScheduler", "err", err)
-						return
-					}
-
-					for _, e := range events {
-						body, err := json.Marshal(e)
-						if err != nil {
-							a.logger.Warnw("error marshal event", "MethodName", "RunScheduler", "err", err)
-							return
-						}
-
-						err = ch.Publish(
-							"",     // exchange
-							q.Name, // routing key
-							false,  // mandatory
-							false,  // immediate
-							amqp.Publishing{
-								ContentType: "application/json",
-								Body:        []byte(body),
-							},
-						)
-					}
-				}()
-			}
-		}
-	}()
-
-	return nil
 }
 
 func hasFreeTime(existingEvents []*models.Event, start, end time.Time) bool {

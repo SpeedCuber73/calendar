@@ -87,9 +87,6 @@ func main() {
 	cancel()
 	wg.Wait()
 
-	err = mqConsumer.GracefulStop()
-	failOnError(err, "connot gracefully stop consumer")
-
 	fmt.Println("Sender stopped")
 }
 

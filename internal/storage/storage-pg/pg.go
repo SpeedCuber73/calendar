@@ -10,6 +10,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// insert into events(uuid, title,start_at,duration,user_name,notify_at,notified,descr) VALUES ('1','tit','2020-01-01',2131312,'Kira','2020-01-02',false,'some description');
 type event struct {
 	UUID        string
 	Title       string
@@ -130,6 +131,7 @@ func (pg *StoragePg) PopNotifications(ctx context.Context) ([]*models.Event, err
 		var e models.Event
 		err = rows.StructScan(&e)
 		if err != nil {
+			fmt.Println("is it? ", err)
 			tx.Rollback()
 			return nil, err
 		}

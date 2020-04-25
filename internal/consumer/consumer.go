@@ -162,6 +162,13 @@ func (c *Consumer) Handle(ctx context.Context, wg *sync.WaitGroup, fn func(<-cha
 	if err = c.connect(); err != nil {
 		return fmt.Errorf("Error: %v", err)
 	}
+	defer func() {
+		err := c.gracefulStop()
+		if err != nil {
+			log.Println("connot gracefully stop consumer ", err)
+		}
+	}()
+
 	msgs, err := c.announceQueue()
 	if err != nil {
 		return fmt.Errorf("Error: %v", err)
@@ -194,7 +201,7 @@ func (c *Consumer) Handle(ctx context.Context, wg *sync.WaitGroup, fn func(<-cha
 	}
 }
 
-func (c *Consumer) GracefulStop() error {
+func (c *Consumer) gracefulStop() error {
 	err := c.channel.Close()
 	if err != nil {
 		return err

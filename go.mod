@@ -3,7 +3,9 @@ module github.com/bobrovka/calendar
 go 1.12
 
 require (
+	github.com/cenkalti/backoff v2.1.1+incompatible
 	github.com/cenkalti/backoff/v3 v3.2.2
+	github.com/go-errors/errors v1.0.2
 	github.com/golang/protobuf v1.3.5
 	github.com/google/uuid v1.1.1
 	github.com/heetch/confita v0.8.0

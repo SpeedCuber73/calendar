@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	mock "github.com/bobrovka/calendar/internal/calendar-app/storage-mock"
 	"github.com/bobrovka/calendar/internal/models"
+	mock "github.com/bobrovka/calendar/internal/storage/storage-mock"
 	"github.com/stretchr/testify/assert"
 )
 
